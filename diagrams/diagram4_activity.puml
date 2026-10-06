@@ -1,0 +1,132 @@
+@startuml diagram4_activity
+!theme plain
+title "Spare Part Request Creation & Live Interlock Detection Flow - Activity Diagram"
+
+' --- STYLING & PALETTE (Linear/Stripe Enterprise) ---
+skinparam backgroundColor #F8FAFC
+skinparam defaultFontName "Segoe UI, Inter, Arial, sans-serif"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #0F172A
+skinparam roundCorner 8
+skinparam shadowing false
+skinparam arrowColor #4F46E5
+skinparam arrowThickness 1.2
+
+skinparam activity {
+    BorderColor #4F46E5
+    BackgroundColor #FFFFFF
+    FontColor #0F172A
+    BorderThickness 1.2
+    StartColor #4F46E5
+    EndColor #10B981
+}
+
+skinparam activityDiamond {
+    BorderColor #4F46E5
+    BackgroundColor #EEF2FF
+    FontColor #1E1B4B
+}
+
+skinparam partition {
+    BorderColor #CBD5E1
+    BackgroundColor #FFFFFF
+    FontColor #334155
+    FontStyle bold
+}
+
+skinparam note {
+    BorderColor #F59E0B
+    BackgroundColor #FEF3C7
+    FontColor #92400E
+    FontSize 11
+}
+
+' --- SWIMLANES ---
+|#F8FAFC|Requestor (Line Engineer)|
+|#FFFFFF|SP-FLOW Frontend UI|
+|#EFF6FF|EMS / ERP Gateway|
+|#ECFDF5|Enterprise Database|
+
+|Requestor (Line Engineer)|
+start
+:Access Item Request Form (Wizard);
+:Input Item Code (e.g., "SP-2024-M08");
+:Click "Load EMS Details";
+
+|SP-FLOW Frontend UI|
+:Send lookup request to EMS endpoint\n`GET /api/v2/ems/item-master/{code}`;
+
+|EMS / ERP Gateway|
+:Query SAP Material Master Table (MARA);
+if (Item Code exists in Master DB?) then (Yes: Registered Item)
+    :Retrieve Item Details:\n- Name & Detailed Specs\n- High-res Image URL\n- MOQ (Minimum Order Qty)\n- Lead Time (Days)\n- Factory Stock in Warehouse A & B;
+    |SP-FLOW Frontend UI|
+    :Auto-populate Item Details Preview Card;
+    
+    ' --- LIVE INTERLOCK CHECK BRANCH ---
+    if (Warehouse Stock > 0?) then (Yes: Stock Found)
+        #FEF2F2:<b>Display RED Interlock Warning Card:</b>\n"⚠️ INTERLOCK DETECTED: Stock available in Warehouse A (5 pcs).\nPlease submit a Material Issue Request first.";
+        
+        |Requestor (Line Engineer)|
+        if (Can reuse existing warehouse stock?) then (Yes: Re-utilize Stock)
+            :Click "Go to Warehouse Work Order Issue";
+            :Submit Material Issue under Work Order (WO);
+            stop
+        else (No: Line Leader Emergency Override)
+            :Check "Bypass with Line Leader Emergency Justification";
+            :Enter Line Leader Name & Stoppage Override Reason;
+            note right
+              <b>Corporate Compliance:</b>
+              Override justification is permanently
+              audited in InterlockLog to prevent
+              unauthorized duplicate inventory purchasing.
+            end note
+        endif
+        |SP-FLOW Frontend UI|
+    else (No: Zero Plant Stock)
+        #ECFDF5:<b>Display GREEN Status Badge:</b>\n"✅ Interlock OK: Zero Available Stock in Warehouse";
+    endif
+
+else (No: Uncataloged Part)
+    |SP-FLOW Frontend UI|
+    #FEF3C7:<b>Display Notice:</b>\n"Unregistered Item Code in EMS Master";
+    |Requestor (Line Engineer)|
+    :Open "New Part Registration" sub-form;
+    :Manually input Technical Specifications & Target Vendor;
+endif
+
+|Requestor (Line Engineer)|
+:Select <b>Classification & Location</b>:\n- Purchase Reason (Routine, Breakdown, Improvement)\n- Category (Mechanical, Electrical, Pneumatic, Consumables)\n- Target Process & Line Number (e.g., Line 02 - SMT);
+
+:Input <b>Logic & Quantity Rationale</b>:\n- Free-Text Logic Justification (Machine hours, MTBF, failure alarm)\n- Requested Quantity (Numeric) & Unit (Pcs/Set)\n- Expected Date of Use;
+
+:Click "Submit Request to PIC Review Hub";
+
+|SP-FLOW Frontend UI|
+:Validate required fields & Interlock conditions;
+if (Form Valid & (Stock == 0 OR Override Justified)?) then (Yes)
+    :Assemble JSON Payload;
+    :POST /api/v2/requests/submit;
+    
+    |Enterprise Database|
+    :Insert new record in `SparePartRequest`:\n- `status` = "Pending PIC Review"\n- `stage` = "pic_review"\n- `interlockStatus` = (OK or Stock Found with Override);
+    if (Override Justified?) then (Yes)
+        :Insert audit record into `InterlockLog`;
+    endif
+    
+    |SP-FLOW Frontend UI|
+    :Trigger Toast: "Spare Part Request Submitted Successfully";
+    :Redirect Requestor to Workspace Task Center;
+    
+    |Requestor (Line Engineer)|
+    :View newly created request in Active Requisition Table;
+    stop
+else (No: Interlock Violation or Missing Logic)
+    |SP-FLOW Frontend UI|
+    #FEF2F2:Highlight missing fields or un-overridden interlock error;
+    |Requestor (Line Engineer)|
+    :Review error notes and adjust inputs;
+    stop
+endif
+
+@enduml

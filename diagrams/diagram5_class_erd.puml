@@ -1,0 +1,220 @@
+@startuml diagram5_class_erd
+!theme plain
+title "Enterprise Spare Part Procurement & Workflow System - Database ERD / Class Diagram (Prisma Ready)"
+
+' --- STYLING & PALETTE (Linear/Stripe Enterprise) ---
+skinparam backgroundColor #F8FAFC
+skinparam defaultFontName "Segoe UI, Inter, Arial, sans-serif"
+skinparam defaultFontSize 11
+skinparam defaultFontColor #0F172A
+skinparam roundCorner 8
+skinparam shadowing false
+skinparam linetype ortho
+skinparam arrowColor #4F46E5
+skinparam arrowThickness 1.2
+
+skinparam class {
+    BorderColor #4F46E5
+    BackgroundColor #FFFFFF
+    HeaderBackgroundColor #EEF2FF
+    FontColor #0F172A
+    FontSize 11
+    BorderThickness 1.2
+}
+
+skinparam enum {
+    BorderColor #F59E0B
+    BackgroundColor #FFFFFF
+    HeaderBackgroundColor #FEF3C7
+    FontColor #92400E
+    FontSize 10
+}
+
+skinparam note {
+    BorderColor #F59E0B
+    BackgroundColor #FEF3C7
+    FontColor #92400E
+    FontSize 11
+}
+
+' --- ENUMS ---
+enum RequestStatus {
+  DRAFT
+  IN_REVIEW
+  PENDING_PIC_REVIEW
+  APPROVED_LINE_ITEM
+  PENDING_MANAGEMENT
+  APPROVED_FINAL
+  REJECTED_CANCELLED
+  PO_STANDBY
+  PO_REMAINED
+  PO_RECEIVING
+  STOCKED_IN_INVENTORY
+}
+
+enum CodeStatus {
+  ACTIVE
+  STOP_PO_2YEARS
+  ACTIVE_REQUESTED
+  ACTIVE_SYNCED_MASTER
+}
+
+enum PriceStatus {
+  QUOTED
+  UNQUOTED
+  NEED_REVISE
+  PRICE_RISK_ALERT
+}
+
+enum POStage {
+  PO_REQUEST
+  PO_STANDBY
+  PO_REMAINED
+  PO_RECEIVING
+  COMPLETED_ISSUED
+}
+
+enum TaskType {
+  CLARIFICATION
+  PRICE_ALERT
+  APPRAISAL_REVIEW
+  QC_INSPECTION
+}
+
+' --- ENTITIES ---
+
+entity "ItemMaster" as ItemMaster {
+  * **code** : VARCHAR(64) <<PK>>
+  --
+  * **name** : VARCHAR(255)
+  * **category** : VARCHAR(64)
+  * **specDescription** : TEXT
+  * **imageUrl** : VARCHAR(512)
+  * **moq** : INT = 1
+  * **leadTimeDays** : INT = 14
+  * **codeStatus** : CodeStatus = ACTIVE
+  * **priceStatus** : PriceStatus = QUOTED
+  * **unitPrice** : DECIMAL(12,2)
+  * **previousPrice** : DECIMAL(12,2)
+  * **warehouseStockQty** : INT = 0
+  * **stockLocation** : VARCHAR(128)
+  * **vendor** : VARCHAR(255)
+  * **createdAt** : TIMESTAMP
+  * **updatedAt** : TIMESTAMP
+}
+
+entity "SparePartRequest" as SparePartRequest {
+  * **id** : VARCHAR(64) <<PK>>
+  --
+  * **requestorId** : VARCHAR(64)
+  * **requestorName** : VARCHAR(128)
+  * **itemCode** : VARCHAR(64) <<FK>>
+  * **purchaseReason** : VARCHAR(128)
+  * **lineNo** : VARCHAR(64)
+  * **processName** : VARCHAR(128)
+  * **logicExplanation** : TEXT
+  * **quantity** : INT
+  * **unit** : VARCHAR(16) = "Pcs"
+  * **needByDate** : DATE
+  * **status** : RequestStatus = PENDING_PIC_REVIEW
+  * **interlockStatus** : VARCHAR(64)
+  * **clarificationRequested** : BOOLEAN = FALSE
+  * **createdAt** : TIMESTAMP
+  * **updatedAt** : TIMESTAMP
+}
+
+entity "InterlockLog" as InterlockLog {
+  * **id** : VARCHAR(64) <<PK>>
+  --
+  * **requestId** : VARCHAR(64) <<FK>>
+  * **stockQtyFound** : INT
+  * **stockLocation** : VARCHAR(128)
+  * **interlockType** : VARCHAR(64)
+  * **isResolved** : BOOLEAN = FALSE
+  * **isBypassed** : BOOLEAN = FALSE
+  * **overrideReason** : TEXT
+  * **bypassedBy** : VARCHAR(128)
+  * **resolvedAt** : TIMESTAMP
+  * **createdAt** : TIMESTAMP
+}
+
+entity "POLifecycle" as POLifecycle {
+  * **poNumber** : VARCHAR(64) <<PK>>
+  --
+  * **requestId** : VARCHAR(64) <<FK, UNIQUE>>
+  * **vendorName** : VARCHAR(255)
+  * **vendorCode** : VARCHAR(64)
+  * **poStage** : POStage = PO_REQUEST
+  * **finalPrice** : DECIMAL(12,2)
+  * **isPriceRisk** : BOOLEAN = FALSE
+  * **priceVariancePct** : DECIMAL(5,2)
+  * **deliveredQty** : INT = 0
+  * **remainingQty** : INT
+  * **qcRequired** : BOOLEAN = FALSE
+  * **qcPassed** : BOOLEAN = FALSE
+  * **targetSystemApproved** : BOOLEAN = FALSE
+  * **issuedAt** : TIMESTAMP
+  * **dockArrivedAt** : TIMESTAMP
+}
+
+entity "TaskList" as TaskList {
+  * **id** : VARCHAR(64) <<PK>>
+  --
+  * **requestId** : VARCHAR(64) <<FK>>
+  * **targetId** : VARCHAR(64)
+  * **assignedToUserId** : VARCHAR(64)
+  * **taskType** : TaskType = CLARIFICATION
+  * **severity** : VARCHAR(16) = "warning"
+  * **commentText** : TEXT
+  * **replyText** : TEXT
+  * **isCompleted** : BOOLEAN = FALSE
+  * **createdAt** : TIMESTAMP
+  * **resolvedAt** : TIMESTAMP
+}
+
+entity "WorkOrderIssue" as WorkOrderIssue {
+  * **woCode** : VARCHAR(64) <<PK>>
+  --
+  * **targetItemCode** : VARCHAR(64) <<FK>>
+  * **line** : VARCHAR(64)
+  * **requestedQty** : INT
+  * **issuedQty** : INT
+  * **isMismatch** : BOOLEAN = FALSE
+  * **mismatchReason** : TEXT
+  * **issueReason** : TEXT
+  * **issueCost** : DECIMAL(12,2)
+  * **issuedBy** : VARCHAR(128)
+  * **issuedAt** : TIMESTAMP
+}
+
+' --- RELATIONSHIPS (Multiplicity & Foreign Keys) ---
+
+ItemMaster "1" ||--o{ "0..*" SparePartRequest : "referenced by\n(itemCode)"
+SparePartRequest "1" ||--o| "0..1" POLifecycle : "tracked via\n(requestId)"
+SparePartRequest "1" ||--o{ "0..*" InterlockLog : "audits\n(requestId)"
+SparePartRequest "1" ||--o{ "0..*" TaskList : "generates\n(requestId)"
+ItemMaster "1" ||--o{ "0..*" WorkOrderIssue : "dispensed in\n(targetItemCode)"
+
+' Connect Enums to Entities for documentation clarity
+SparePartRequest .right. RequestStatus
+ItemMaster .left. CodeStatus
+ItemMaster .left. PriceStatus
+POLifecycle .right. POStage
+TaskList .right. TaskType
+
+note top of InterlockLog
+  <b>Audit Compliance:</b>
+  When stock is detected > 0 and
+  bypassed via Line Leader justification,
+  a permanent row is recorded here for
+  quarterly finance audit and loss prevention.
+end note
+
+note bottom of POLifecycle
+  <b>Mất Giá Alert (Price Risk):</b>
+  If supplier spot quote exceeds baseline by >= 10%,
+  `isPriceRisk` is flagged TRUE, enforcing a hold
+  in PO_STANDBY until management sign-off.
+end note
+
+@enduml

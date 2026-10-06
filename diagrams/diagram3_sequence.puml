@@ -1,0 +1,148 @@
+@startuml diagram3_sequence
+!theme plain
+autonumber "<b>[00]</b>"
+title "PIC Code Activation & Real-time EMS Status Refresh - Sequence Diagram"
+
+' --- STYLING & PALETTE (Linear/Stripe Enterprise) ---
+skinparam backgroundColor #F8FAFC
+skinparam defaultFontName "Segoe UI, Inter, Arial, sans-serif"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #0F172A
+skinparam roundCorner 8
+skinparam shadowing false
+skinparam arrowColor #4F46E5
+skinparam arrowThickness 1.2
+
+skinparam participant {
+    BorderColor #4F46E5
+    BackgroundColor #FFFFFF
+    FontColor #1E1B4B
+    FontSize 12
+    FontStyle bold
+    BorderThickness 1.2
+}
+
+skinparam actor {
+    BorderColor #4F46E5
+    BackgroundColor #EEF2FF
+    FontColor #1E1B4B
+    FontSize 12
+    FontStyle bold
+}
+
+skinparam database {
+    BorderColor #10B981
+    BackgroundColor #ECFDF5
+    FontColor #065F46
+    FontStyle bold
+}
+
+skinparam entity {
+    BorderColor #3B82F6
+    BackgroundColor #EFF6FF
+    FontColor #1E40AF
+    FontStyle bold
+}
+
+skinparam box {
+    BorderColor #CBD5E1
+    BackgroundColor #FFFFFF
+    FontColor #475569
+}
+
+skinparam note {
+    BorderColor #F59E0B
+    BackgroundColor #FEF3C7
+    FontColor #92400E
+    FontSize 11
+}
+
+' --- PARTICIPANTS ---
+actor "PIC Reviewer\n(Code Master)" as PIC
+box "Enterprise Web Application" #F8FAFC
+    boundary "Frontend UI\n(React SPA / Tailwind)" as UI
+    control "Backend Service\n(Node.js / Express API)" as API
+    database "Enterprise Database\n(PostgreSQL / Prisma)" as DB
+end box
+entity "Master Code / EMS API\n(Enterprise SAP Gateway)" as EMS
+
+== Sequence Flow 1: Active Code Request (Stop PO Resolution) ==
+
+PIC -> UI : Clicks "✉️ Request Active Code (Master Code)"\nfor item `SP-2024-M08` [Stop PO 2 Yrs]
+activate UI
+
+UI -> UI : Optimistically render UI status badge:\n"Active Requested ⏳"
+UI -> API : POST /api/v2/pic/active-code-request\n{ itemId: "SP-2024-M08", requestor: "PIC Specialist" }
+activate API
+
+API -> DB : Find Item Requisition by ID\n`prisma.sparePartRequest.findUnique(...)`
+activate DB
+DB --> API : Returns Item & Master Code context
+deactivate DB
+
+API -> EMS : POST /api/master-code/reactivation-ticket\n{\n  itemCode: "SP-2024-M08",\n  reason: "Line 05 Assembly Urgent Requirement",\n  targetLine: "Line 05 - Assembly"\n}
+activate EMS
+
+note over EMS
+  <b>Enterprise Master Code Board:</b>
+  Validates 2-year obsolescence clause.
+  Creates formal Jira/SAP ticketing workflow
+  and queues email notification to Master Data Admin.
+end note
+
+EMS --> API : 200 OK HTTP\n{\n  ticketNo: "MC-TICKET-9941",\n  status: "QUEUED_FOR_APPROVAL",\n  slaHours: 24\n}
+deactivate EMS
+
+API -> DB : Update Item Record\n`prisma.itemMaster.update({\n  codeStatus: "Active Requested ⏳",\n  ticketRef: "MC-TICKET-9941"\n})`
+activate DB
+DB --> API : Update Confirmed
+deactivate DB
+
+API --> UI : 200 OK HTTP JSON\n{\n  success: true,\n  message: "Reactivation ticket MC-TICKET-9941 dispatched"\n}
+deactivate API
+
+UI -> UI : Display Toast Notification:\n"Master Code Activation Sent: Dispatched ticket to Master Code Board"
+UI --> PIC : Visual confirmation on Data Grid row
+deactivate UI
+
+== Sequence Flow 2: Real-time Manual EMS Catalog Synchronization ==
+
+PIC -> UI : Clicks "🔄 Refresh Code Status (EMS)"\non Top Action Bar
+activate UI
+
+UI -> UI : Set Refresh Spinner state (isSyncing = true)
+UI -> API : POST /api/v2/ems/sync-master-catalog\n{ batchLine: "ALL", filterInactive: true }
+activate API
+
+API -> DB : Query active & flagged Item Codes list\n`prisma.sparePartRequest.findMany({ select: { itemCode: true } })`
+activate DB
+DB --> API : List of [SP-2024-C01, SP-2024-M08, SP-2024-E12, SP-2024-B09, ...]
+deactivate DB
+
+API -> EMS : GET /api/v2/ems/item-status?codes=SP-2024-C01,SP-2024-M08,SP-2024-E12,SP-2024-B09
+activate EMS
+
+note over EMS
+  <b>EMS Enterprise Catalog Engine:</b>
+  Queries SAP Master Material Tables (MARA/MARC),
+  retrieves latest active status, vendor RFQ index,
+  and spot price updates from global ERP nodes.
+end note
+
+EMS --> API : 200 OK HTTP JSON Array\n[\n  { code: "SP-2024-M08", codeStatus: "Active (Synced Master)", unitPrice: 92 },\n  { code: "SP-2024-E12", codeStatus: "Active", priceRisk: true, unitPrice: 245 },\n  { code: "SP-2024-B09", codeStatus: "Stop PO", priceStatus: "Need Revise", unitPrice: 18.5 }\n]
+deactivate EMS
+
+API -> DB : Batch Upsert / Sync Transaction\n`prisma.$transaction([\n  prisma.itemMaster.updateMany(...),\n  prisma.auditLog.create(...)\n])`
+activate DB
+DB --> API : Transaction Committed (5 records updated)
+deactivate DB
+
+API --> UI : 200 OK HTTP JSON\n{\n  syncedCount: 5,\n  timestamp: "2026-10-05T23:14:00Z",\n  updatedItems: [...]\n}
+deactivate API
+
+UI -> UI : Update React Global State (`AppContext.items`)\nReset Spinner (isSyncing = false)
+UI -> UI : Trigger Success Toast:\n"Master Code Synchronization Completed: Synced 5 codes from Master Code"
+UI --> PIC : Data Grid re-renders with fresh badges & updated prices
+deactivate UI
+
+@enduml

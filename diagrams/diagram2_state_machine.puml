@@ -1,0 +1,165 @@
+@startuml diagram2_state_machine
+!theme plain
+title "Enterprise Spare Part Procurement & Workflow System - Request & PO State Lifecycle"
+
+' --- STYLING & PALETTE (Linear/Stripe Enterprise) ---
+skinparam backgroundColor #F8FAFC
+skinparam defaultFontName "Segoe UI, Inter, Arial, sans-serif"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #0F172A
+skinparam roundCorner 8
+skinparam shadowing false
+skinparam arrowColor #6366F1
+skinparam arrowThickness 1.2
+
+skinparam state {
+    BorderColor #4F46E5
+    BackgroundColor #FFFFFF
+    FontColor #0F172A
+    StartColor #4F46E5
+    EndColor #10B981
+    BorderThickness 1.2
+}
+
+skinparam note {
+    BorderColor #F59E0B
+    BackgroundColor #FEF3C7
+    FontColor #92400E
+    FontSize 11
+}
+
+' --- TOP-LEVEL LIFECYCLE ---
+[*] --> Draft : Requestor Initiates Requisition
+
+' =========================================================
+' 1. INITIAL REQUEST STAGE
+' =========================================================
+state "1. Initial Request Stage" as S_Initial #EFF6FF {
+    Draft : Requestor enters Item Code, Line, Qty
+    Draft : System queries EMS for MOQ, Lead Time, Specs
+    Draft : Live Interlock Check: Available Stock
+    
+    state c_interlock <<choice>>
+    
+    Draft --> c_interlock : Submit Form
+    
+    c_interlock --> Interlock_Blocked : [Stock > 0 & No Override]
+    c_interlock --> Pending_PIC_Review : [Stock == 0 OR Leader Override Justified]
+    
+    Interlock_Blocked : Stock found in Warehouse A/B
+    Interlock_Blocked : Prompt user to submit Material Issue
+    Interlock_Blocked --> Draft : Re-evaluate / Edit
+}
+
+' =========================================================
+' 2. REVIEW & APPRAISAL COMPOSITE STATE
+' =========================================================
+state "2. Review & Appraisal Stage (PIC & Management)" as S_Review #F0FDF4 {
+    
+    Pending_PIC_Review : PIC Specialist evaluates technical spec
+    Pending_PIC_Review : Validates code activity & usage history
+
+    state c_code_check <<choice>>
+    Pending_PIC_Review --> c_code_check : Check Master Code Status
+
+    ' Path A: Stop PO (2 Years No Use)
+    c_code_check --> Pending_Active_Code : [Code Status == "Stop PO"]
+    Pending_Active_Code : Flagged: Inactive for 730+ Days
+    Pending_Active_Code : Action: Dispatch activation email to Master Code Board
+    Pending_Active_Code --> Pending_PIC_Review : Master Code Board Re-activates Code
+
+    ' Path B: Logic Clarification Needed
+    c_code_check --> Tasklist_Requestor : [Logic Inadequate / Clarification Needed]
+    Tasklist_Requestor : Side-drawer task created in Requestor Inbox
+    Tasklist_Requestor : Requestor submits machine run-hours & MTBF logic
+    Tasklist_Requestor --> Pending_PIC_Review : Requestor Clarification Submitted
+
+    ' Path C: Normal Active Spec -> EMS RFQ Quote
+    c_code_check --> Pending_EMS_Quote : [Active Code & Logic OK]
+    Pending_EMS_Quote : Bulk RFQ Quote Request dispatched to Purchaser
+    Pending_EMS_Quote : Monitor price variance / risk (> 10% change)
+
+    state c_price_check <<choice>>
+    Pending_EMS_Quote --> c_price_check : Receive Supplier Quotation
+
+    c_price_check --> Pending_EMS_Quote : [Price Risk / Need Revise -> Send Revise Email]
+    c_price_check --> Approved_Line_Item : [Quoted Price Validated]
+
+    ' Path D: Monthly Appraisal Consolidation
+    Approved_Line_Item : Line item bundled into Monthly Appraisal Batch
+    Approved_Line_Item : Actual spend mapped against $45,000 Budget Ceiling
+    Approved_Line_Item --> Pending_Management : Monthly Meeting Batch Exported (Excel/CSV)
+
+    Pending_Management : Executive Committee Appraisal Review
+    Pending_Management : Evaluates Over-budget Flags (+12.5% Line 01)
+
+    state c_appraisal_decision <<choice>>
+    Pending_Management --> c_appraisal_decision : Executive Review
+
+    c_appraisal_decision --> Approved_Final : [Committee Signs Off & PDF Attached]
+    c_appraisal_decision --> Rejected_Cancelled : [Budget Ceiling Exceeded & Rejected]
+    
+    Rejected_Cancelled : Requisition Cancelled
+    Rejected_Cancelled --> [*]
+}
+
+' =========================================================
+' 3. PO LIFECYCLE COMPOSITE STATE (4-Stage Pipeline)
+' =========================================================
+state "3. PO Execution & Warehouse Fulfillment" as S_PO #FAF5FF {
+
+    Approved_Final --> PO_Request : Generate Target System Requisition
+
+    ' Stage 1: PO Request
+    PO_Request : Stage 1: Target System Requirement Validation
+    PO_Request : Automated ERP purchase requisition generated
+    PO_Request --> PO_Standby : Budget Approved & Released
+
+    ' Stage 2: PO Standby
+    PO_Standby : Stage 2: Held for Price Volatility & Supplier Release
+    PO_Standby : Check Price Risk (Mất Giá Alert)
+    PO_Standby --> PO_Remained : PO Issued to Supplier (PO# Created)
+
+    ' Stage 3: PO Remained
+    PO_Remained : Stage 3: PO Issued — Tracking Delivery Batches
+    PO_Remained : Tracks Delivered Qty vs Remaining Qty
+    PO_Remained --> PO_Receiving : Physical Carrier Arrives at Gate 2
+
+    ' Stage 4: PO Receiving & QC
+    PO_Receiving : Stage 4: Arrived at Receiving Gate Dock
+    
+    state c_qc <<choice>>
+    PO_Receiving --> c_qc : Check QA/QC Mandate Flag
+    
+    c_qc --> Gate_QC_Inspection : [Flag: "🚩 QC Inspection Required"]
+    c_qc --> Stocked_In_Inventory : [Standard Commercial Item]
+
+    Gate_QC_Inspection : High-sensitivity parts (PLC, Inverter, Optical)
+    Gate_QC_Inspection : ESD, Seal, & Electrical testing at Gate 2
+    Gate_QC_Inspection --> Stocked_In_Inventory : Pass QC & Stock In (Action clicked)
+    Gate_QC_Inspection --> PO_Receiving : [QC Fail -> Supplier RMA Replacement]
+
+    ' Fulfillment under WO
+    Stocked_In_Inventory : Placed into Factory Warehouse Bin (A/B)
+    Stocked_In_Inventory : Available for Line Work Order Dispatch
+
+    Stocked_In_Inventory --> Completed_Stock_Issued : Material Issued via Work Order (WO)\n[Verify Actual Issued Qty == Requested Qty]
+}
+
+Completed_Stock_Issued --> [*] : Production Line Assembly Consumed
+
+note right of Interlock_Blocked
+  <b>Interlock Guard:</b>
+  Enforces cost avoidance by
+  re-utilizing existing plant stock
+  before releasing new procurement funds.
+end note
+
+note right of Gate_QC_Inspection
+  <b>Quality Gate:</b>
+  Critical electrical parts cannot
+  enter active inventory until
+  Warehouse Keeper executes "Pass QC".
+end note
+
+@enduml

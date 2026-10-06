@@ -1,0 +1,148 @@
+@startuml diagram1_use_case
+!theme plain
+title "Enterprise Spare Part Procurement & Workflow System - Use Case Diagram"
+
+' --- STYLING & PALETTE (Linear/Stripe Enterprise) ---
+skinparam backgroundColor #F8FAFC
+skinparam defaultFontName "Segoe UI, Inter, Arial, sans-serif"
+skinparam defaultFontSize 12
+skinparam defaultFontColor #0F172A
+skinparam roundCorner 8
+skinparam shadowing false
+skinparam arrowColor #6366F1
+skinparam arrowThickness 1.2
+
+skinparam actor {
+    BorderColor #4F46E5
+    BackgroundColor #EEF2FF
+    FontColor #1E1B4B
+    FontSize 12
+    FontStyle bold
+}
+
+skinparam usecase {
+    BorderColor #4F46E5
+    BackgroundColor #FFFFFF
+    FontColor #0F172A
+    BorderThickness 1.2
+    ArrowColor #6366F1
+}
+
+skinparam package {
+    BorderColor #CBD5E1
+    BackgroundColor #FFFFFF
+    FontColor #334155
+    FontStyle bold
+}
+
+skinparam note {
+    BorderColor #F59E0B
+    BackgroundColor #FEF3C7
+    FontColor #92400E
+    FontSize 11
+}
+
+' --- ACTORS ---
+left to right direction
+
+actor "Requestor\n(Line Engineer)" as Req
+actor "PIC Review\n(Code Master)" as PIC
+actor "Leader / Management\n(Executive)" as Lead
+actor "Purchaser\n(Procurement)" as Purch
+actor "Warehouse Keeper\n(Dock & Stock)" as WH
+
+actor "EMS / ERP System\n<<External System>>" as EMS #EFF6FF
+
+' --- SYSTEM BOUNDARY ---
+rectangle "Spare Part Procurement & Workflow System" {
+
+    package "Requisition & Interlock Management" {
+        usecase "<b>UC01: Create Spare Part Request</b>\n--\nFree-text Logic & Check Stock" as UC01
+        usecase "Validate Warehouse Stock\n& Interlock Gate" as UC01_Interlock
+        usecase "Submit Leader Override Justification" as UC01_Override
+        usecase "<b>UC03: Handle Tasklist & Resolve Interlocks</b>\n--\nInquiry & Clarification Drawer" as UC03
+        usecase "Reply to PIC Logic Clarification" as UC03_Reply
+    }
+
+    package "PIC Review & Master Code Management" {
+        usecase "<b>UC02: Request Active Code & Trigger Quote</b>\n--\nHandle Stop PO (2 Yrs Inactive)" as UC02
+        usecase "Dispatch Active Code Email to Master Admin" as UC02_Active
+        usecase "Bulk Create EMS RFQ Quote Tickets" as UC02_Quote
+        usecase "<b>UC07: Sync Data Realtime / Manual Refresh</b>\n--\nPull Master Code Status & Prices" as UC07
+    }
+
+    package "Appraisal & Strategic Management" {
+        usecase "<b>UC04: Monthly Appraisal & Export Management</b>\n--\nBudget Ceiling vs Actual Cost" as UC04
+        usecase "Export Excel / CSV Ledger for Board" as UC04_Export
+        usecase "Record Sign-off & Attach Meeting Minutes" as UC04_Sign
+    }
+
+    package "Purchasing & PO Lifecycle" {
+        usecase "<b>UC05: Issue PO & Track PO Lifecycle</b>\n--\n4-Stage Pipeline Tracker" as UC05
+        usecase "Detect Price Risk (Mất Giá Alert)" as UC05_PriceRisk
+        usecase "Advance PO: Request > Standby > Remained" as UC05_Advance
+    }
+
+    package "Fulfillment & Warehouse Inventory" {
+        usecase "<b>UC06: QC Inspection & Work Order Issue</b>\n--\nDock Receipt & Material Dispense" as UC06
+        usecase "Verify Gate 2 Dock QC Inspection Flag" as UC06_QC
+        usecase "Issue Stock under Work Order (WO)\nwith Discrepancy Mismatch Alert" as UC06_WO
+    }
+
+    ' --- USE CASE RELATIONSHIPS (include / extend) ---
+    UC01 ..> UC01_Interlock : <<include>>
+    UC01_Interlock <.. UC01_Override : <<extend>>\n[Stock > 0]
+    
+    UC03 ..> UC03_Reply : <<include>>
+
+    UC02 ..> UC02_Active : <<extend>>\n[Code == Stop PO]
+    UC02 ..> UC02_Quote : <<include>>
+
+    UC04 ..> UC04_Export : <<include>>
+    UC04 ..> UC04_Sign : <<include>>
+
+    UC05 ..> UC05_PriceRisk : <<extend>>\n[Price Change > 10%]
+    UC05 ..> UC05_Advance : <<include>>
+
+    UC06 ..> UC06_QC : <<include>>
+    UC06 ..> UC06_WO : <<include>>
+}
+
+' --- ACTOR ASSOCIATIONS ---
+Req --> UC01
+Req --> UC03
+
+PIC --> UC02
+PIC --> UC03
+PIC --> UC07
+
+Lead --> UC04
+Lead --> UC05
+
+Purch --> UC02
+Purch --> UC05
+
+WH --> UC06
+
+' --- EXTERNAL SYSTEM DEPENDENCIES ---
+UC01 ..> EMS : <<call API>>\n(Fetch Item Details)
+UC02 ..> EMS : <<call API>>\n(RFQ Quote Dispatch)
+UC05 ..> EMS : <<sync>>\n(Target System PO)
+UC07 ..> EMS : <<call API / sync>>\n(Master Code Status & Price)
+
+note right of UC01_Interlock
+  <b>Business Rule:</b>
+  If Stock > 0 in Warehouse A/B,
+  system blocks new PO requisition
+  until Material Issue is requested
+  or Leader override is justified.
+end note
+
+note bottom of UC05_PriceRisk
+  <b>Alert Trigger:</b>
+  Unit price increase >= 10%
+  triggers Standby state hold
+  requiring Purchaser re-quote.
+end note
+
+@enduml
