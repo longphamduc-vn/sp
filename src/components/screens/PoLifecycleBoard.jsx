@@ -22,35 +22,37 @@ export function PoLifecycleBoard() {
     filteredItems,
     advancePoStage,
     setSelectedPoDetail,
-    addToast
+    addToast,
+    t,
+    language
   } = useApp();
 
   const stages = [
     {
       id: 'po_request',
-      title: '1. PO Request',
-      subtitle: 'Target System Requirement Validation',
+      title: t('po.stage1Title'),
+      subtitle: t('po.stage1Sub'),
       accentColor: 'border-t-blue-500',
       badgeColor: 'bg-blue-100 text-blue-700'
     },
     {
       id: 'po_standby',
-      title: '2. PO Standby',
-      subtitle: 'Held for Budget & Price Risk Clearance',
+      title: t('po.stage2Title'),
+      subtitle: t('po.stage2Sub'),
       accentColor: 'border-t-amber-500',
       badgeColor: 'bg-amber-100 text-amber-700'
     },
     {
       id: 'po_remained',
-      title: '3. PO Remained',
-      subtitle: 'PO Issued — Tracking Split Shipments',
+      title: t('po.stage3Title'),
+      subtitle: t('po.stage3Sub'),
       accentColor: 'border-t-indigo-600',
       badgeColor: 'bg-indigo-100 text-indigo-700'
     },
     {
       id: 'po_receiving',
-      title: '4. PO Receiving',
-      subtitle: 'Arrived at Gate Dock — Pending QC',
+      title: t('po.stage4Title'),
+      subtitle: t('po.stage4Sub'),
       accentColor: 'border-t-emerald-500',
       badgeColor: 'bg-emerald-100 text-emerald-700'
     }
@@ -102,20 +104,24 @@ export function PoLifecycleBoard() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              PO Lifecycle Board (4-Stage Procurement Pipeline)
+              {t('po.title')}
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
               Active Pipeline
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-            Trace spare part purchase orders across Target System checking, budget standby hold, open order delivery tracking, and receiving dock QC inspection.
+            {t('po.subtitle')}
           </p>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
           <Info className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-          <span>Click cards for full audit record, or use arrow buttons to advance stages.</span>
+          <span>
+            {language === 'vi'
+              ? 'Nhấp vào thẻ để kiểm toán chi tiết PO, hoặc dùng nút mũi tên để chuyển giai đoạn.'
+              : 'Click cards for full audit record, or use arrow buttons to advance stages.'}
+          </span>
         </div>
       </div>
 
@@ -165,7 +171,7 @@ export function PoLifecycleBoard() {
                         </span>
                         {hasPriceRisk && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-full border border-red-200">
-                            🔴 Mất Giá / Price Risk
+                            {language === 'vi' ? '🔴 Rủi ro giá' : '🔴 Mất Giá / Price Risk'}
                           </span>
                         )}
                       </div>
@@ -199,13 +205,13 @@ export function PoLifecycleBoard() {
                       {/* Vendor & Due Date */}
                       <div className="mt-3 pt-2 border-t border-slate-100 space-y-1 text-[11px] text-slate-600">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">Vendor:</span>
+                          <span className="text-slate-400">{t('common.vendor')}:</span>
                           <span className="font-medium text-slate-800 truncate max-w-[120px]">
                             {item.vendor || 'Authorized Distributor'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">Need-by:</span>
+                          <span className="text-slate-400">{t('common.needBy')}:</span>
                           <span className="font-medium text-slate-800 flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-slate-400" />
                             {item.needByDate}
@@ -217,11 +223,11 @@ export function PoLifecycleBoard() {
                       {stage.id === 'po_remained' && (
                         <div className="mt-2 p-2 bg-indigo-50/60 rounded border border-indigo-100 text-[11px]">
                           <div className="flex justify-between text-indigo-900 font-medium">
-                            <span>Delivered:</span>
+                            <span>{t('po.cardDelivered')}</span>
                             <span className="font-bold">{item.deliveredQty || 0} / {item.requestedQty} {item.unit}</span>
                           </div>
                           <div className="flex justify-between text-indigo-700 font-semibold mt-0.5">
-                            <span>Remaining:</span>
+                            <span>{t('po.cardRemaining')}</span>
                             <span className="font-bold text-amber-600">{item.remainingQty || item.requestedQty} {item.unit}</span>
                           </div>
                         </div>
@@ -229,14 +235,16 @@ export function PoLifecycleBoard() {
 
                       {stage.id === 'po_receiving' && (
                         <div className="mt-2 p-2 bg-emerald-50 rounded border border-emerald-100 text-[11px] flex items-center justify-between">
-                          <span className="text-emerald-800 font-medium">Gate 2 Dock:</span>
+                          <span className="text-emerald-800 font-medium">
+                            {language === 'vi' ? 'Cổng nhận Dock 2:' : 'Gate 2 Dock:'}
+                          </span>
                           {item.qcPassed ? (
                             <span className="font-bold text-emerald-700 flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" /> QC Passed
+                              <CheckCircle2 className="w-3 h-3" /> {language === 'vi' ? 'Đạt QC' : 'QC Passed'}
                             </span>
                           ) : (
                             <span className="font-bold text-amber-700 flex items-center gap-1">
-                              <Clock className="w-3 h-3" /> Awaiting QC
+                              <Clock className="w-3 h-3" /> {language === 'vi' ? 'Chờ kiểm tra QC' : 'Awaiting QC'}
                             </span>
                           )}
                         </div>
@@ -249,7 +257,7 @@ export function PoLifecycleBoard() {
                             <button
                               onClick={(e) => handleRollback(e, item, stage.id)}
                               className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded transition-colors"
-                              title="Move back to previous stage"
+                              title={t('po.btnRollback')}
                             >
                               <ArrowLeft className="w-3.5 h-3.5" />
                             </button>
@@ -259,7 +267,7 @@ export function PoLifecycleBoard() {
                         </div>
 
                         <span className="text-[10px] text-slate-400 font-mono">
-                          ${(item.requestedQty * item.unitPrice).toFixed(0)} Total
+                          ${(item.requestedQty * item.unitPrice).toFixed(0)} {language === 'vi' ? 'Tổng' : 'Total'}
                         </span>
 
                         <div>
@@ -269,17 +277,21 @@ export function PoLifecycleBoard() {
                               className="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-[10px] font-bold flex items-center gap-1 transition-colors"
                               title="Advance to next stage"
                             >
-                              Advance <ArrowRight className="w-3 h-3" />
+                              {language === 'vi' ? 'Tiếp tục' : 'Advance'} <ArrowRight className="w-3 h-3" />
                             </button>
                           ) : (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                addToast("Item at Receiving", "Item ready for Warehouse QC Inspection.", "info");
+                                addToast(
+                                  language === 'vi' ? "Vật tư đang tại cổng" : "Item at Receiving",
+                                  language === 'vi' ? "Vật tư đã sẵn sàng kiểm tra QC kho." : "Item ready for Warehouse QC Inspection.",
+                                  "info"
+                                );
                               }}
                               className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[10px] font-bold"
                             >
-                              At Gate
+                              {language === 'vi' ? 'Tại cổng' : 'At Gate'}
                             </button>
                           )}
                         </div>
@@ -290,7 +302,7 @@ export function PoLifecycleBoard() {
 
                 {stageItems.length === 0 && (
                   <div className="h-40 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400 text-xs p-4 text-center">
-                    <span>No PO items in this stage</span>
+                    <span>{t('po.noItemsInStage')}</span>
                   </div>
                 )}
               </div>

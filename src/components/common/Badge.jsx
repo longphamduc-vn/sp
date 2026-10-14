@@ -19,7 +19,16 @@ export function Badge({ children, variant, className = '' }) {
       text.includes('passed') ||
       text.includes('ok') ||
       text.includes('complete') ||
-      text.includes('fully issued')
+      text.includes('fully issued') ||
+      text.includes('hoạt động') ||
+      text.includes('đã duyệt') ||
+      text.includes('đạt chuẩn') ||
+      text.includes('đạt qc') ||
+      text.includes('hoàn tất') ||
+      text.includes('xuất đủ') ||
+      text.includes('hiệu lực') ||
+      text.includes('đã nhập kho') ||
+      text.includes('trong định mức')
     ) {
       resolvedVariant = 'success';
     } else if (
@@ -29,7 +38,12 @@ export function Badge({ children, variant, className = '' }) {
       text.includes('standby') ||
       text.includes('unquoted') ||
       text.includes('stock found') ||
-      text.includes('partial')
+      text.includes('partial') ||
+      text.includes('chờ') ||
+      text.includes('tồn kho') ||
+      text.includes('chưa báo giá') ||
+      text.includes('xuất một phần') ||
+      text.includes('tạm giữ')
     ) {
       resolvedVariant = 'warning';
     } else if (
@@ -40,7 +54,14 @@ export function Badge({ children, variant, className = '' }) {
       text.includes('overdue') ||
       text.includes('reject') ||
       text.includes('mismatch') ||
-      text.includes('over-budget')
+      text.includes('over-budget') ||
+      text.includes('dừng po') ||
+      text.includes('từ chối') ||
+      text.includes('quá hạn') ||
+      text.includes('lệch') ||
+      text.includes('vượt định mức') ||
+      text.includes('vượt ngân sách') ||
+      text.includes('rủi ro')
     ) {
       resolvedVariant = 'danger';
     } else {

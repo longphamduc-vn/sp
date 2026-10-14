@@ -18,9 +18,11 @@ import { TaskClarificationDrawer } from './components/modals/TaskClarificationDr
 import { CreateTaskModal } from './components/modals/CreateTaskModal';
 import { ManagementSignOffModal } from './components/modals/ManagementSignOffModal';
 import { PoDetailModal } from './components/modals/PoDetailModal';
+import { AutoCaptureModal } from './components/modals/AutoCaptureModal';
 
 function MainLayout() {
   const { activeTab } = useApp();
+  const [isAutoCaptureOpen, setIsAutoCaptureOpen] = React.useState(false);
 
   const renderActiveScreen = () => {
     switch (activeTab) {
@@ -44,14 +46,14 @@ function MainLayout() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#F8FAFC]">
+    <div id="app-root" className="flex h-screen w-screen overflow-hidden bg-[#F8FAFC]">
       {/* Left Navigation Sidebar */}
       <Sidebar />
 
       {/* Main App Canvas */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Header Bar */}
-        <Header />
+        <Header onOpenAutoCapture={() => setIsAutoCaptureOpen(true)} />
 
         {/* Scrollable Screen Content */}
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
@@ -66,6 +68,10 @@ function MainLayout() {
       <CreateTaskModal />
       <ManagementSignOffModal />
       <PoDetailModal />
+      <AutoCaptureModal
+        isOpen={isAutoCaptureOpen}
+        onClose={() => setIsAutoCaptureOpen(false)}
+      />
       <ToastContainer />
     </div>
   );

@@ -3,18 +3,12 @@ import { useApp } from '../../context/AppContext';
 import { Badge } from '../common/Badge';
 import {
   PackageCheck,
-  FileCheck,
+  Truck,
   AlertTriangle,
   CheckCircle,
-  Truck,
-  ArrowRight,
   ShieldCheck,
   Layers,
-  Search,
-  PlusCircle,
-  Clock,
-  History,
-  AlertCircle
+  History
 } from 'lucide-react';
 
 export function WarehouseWoHub() {
@@ -23,7 +17,10 @@ export function WarehouseWoHub() {
     workOrders,
     passQcAndStockIn,
     issueWorkOrderStock,
-    addToast
+    addToast,
+    t,
+    language,
+    translateStatus
   } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState('receipt'); // 'receipt' | 'issue'
@@ -39,7 +36,11 @@ export function WarehouseWoHub() {
   const [woLine, setWoLine] = useState('Line 02 - SMT');
   const [requestedQty, setRequestedQty] = useState(6);
   const [actualIssuedQty, setActualIssuedQty] = useState(4); // default simulates mismatch
-  const [issueReason, setIssueReason] = useState('Line 02 feeder calibration breakdown replacement');
+  const [issueReason, setIssueReason] = useState(
+    language === 'vi'
+      ? 'Thay thế hỏng hóc định chuẩn bộ cấp liệu Chuyền 02'
+      : 'Line 02 feeder calibration breakdown replacement'
+  );
 
   const selectedItemData = items.find((i) => i.id === targetItemCode);
 
@@ -49,7 +50,7 @@ export function WarehouseWoHub() {
   const handleIssueSubmit = (e) => {
     e.preventDefault();
     if (!targetItemCode) {
-      addToast("Missing Item Code", "Please select a target spare part code.", "warning");
+      addToast(t('warehouse.toastMissingItem'), t('warehouse.toastMissingItemDesc'), 'warning');
       return;
     }
 
@@ -74,14 +75,14 @@ export function WarehouseWoHub() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Warehouse & Work Order Fulfillment Hub
+              {t('warehouse.title')}
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
-              Inventory Gate
+              {t('warehouse.gateTitle')}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-            Execute dockside Goods Receipt with QA/QC compliance checks and issue inventory under maintenance Work Orders (WO) with automated discrepancy interlock tracking.
+            {t('warehouse.subtitle')}
           </p>
         </div>
 
@@ -96,7 +97,7 @@ export function WarehouseWoHub() {
             }`}
           >
             <Truck className="w-4 h-4" />
-            Tab 1: Goods Receipt (Nhập Kho)
+            {t('warehouse.tabReceipt')}
           </button>
           <button
             onClick={() => setActiveSubTab('issue')}
@@ -107,7 +108,7 @@ export function WarehouseWoHub() {
             }`}
           >
             <PackageCheck className="w-4 h-4" />
-            Tab 2: WO Stock Issue (Xuất Kho theo WO)
+            {t('warehouse.tabIssue')}
           </button>
         </div>
       </div>
@@ -119,14 +120,14 @@ export function WarehouseWoHub() {
             <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
               <div>
                 <h3 className="text-sm font-bold text-slate-900">
-                  Gate 2 Dockside Arrivals (Receiving Inspection)
+                  {t('warehouse.gateDocksideTitle')}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Sensitive electronics and precision mechanical components require QA verification before stock placement
+                  {t('warehouse.gateDocksideDesc')}
                 </p>
               </div>
               <span className="text-xs font-mono px-2.5 py-1 rounded bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
-                Dock 2 Sensor Active
+                {t('warehouse.dockSensorActive')}
               </span>
             </div>
 
@@ -134,12 +135,12 @@ export function WarehouseWoHub() {
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-100/60 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                    <th className="py-3 px-4">PO Number & Item</th>
-                    <th className="py-3 px-4">Vendor & Delivery Slip</th>
-                    <th className="py-3 px-4">Arrived Quantity</th>
-                    <th className="py-3 px-4">QC Inspection Mandate</th>
-                    <th className="py-3 px-4">Warehouse Status</th>
-                    <th className="py-3 px-4 text-right">Dock Action</th>
+                    <th className="py-3 px-4">{t('warehouse.thPoItem')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thVendorSlip')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thArrivedQty')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thQcStatus')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thWarehouseStatus')}</th>
+                    <th className="py-3 px-4 text-right">{t('warehouse.thAction')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -194,26 +195,26 @@ export function WarehouseWoHub() {
                           {needsQc ? (
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-bold animate-pulse-subtle">
                               <span className="text-sm">🚩</span>
-                              QC Inspection Required
+                              {t('warehouse.qcPendingBadge')}
                             </div>
                           ) : item.qcPassed ? (
                             <div className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                               <CheckCircle className="w-3.5 h-3.5" />
-                              Pass QC Verified
+                              {t('warehouse.qcPassedBadge')}
                             </div>
                           ) : (
                             <span className="text-xs text-slate-500 font-medium">
-                              Standard Receiving
+                              {t('warehouse.standardReceiving')}
                             </span>
                           )}
                         </td>
 
                         {/* Status */}
                         <td className="py-3.5 px-4">
-                          <Badge>{item.status}</Badge>
+                          <Badge>{translateStatus(item.status)}</Badge>
                           {item.qcPassed && (
                             <div className="text-[10px] text-emerald-600 mt-1 font-medium">
-                              Ready for Work Order Issuance
+                              {t('warehouse.readyForWo')}
                             </div>
                           )}
                         </td>
@@ -226,20 +227,20 @@ export function WarehouseWoHub() {
                               className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-2xs transition-colors flex items-center gap-1.5 ml-auto"
                             >
                               <ShieldCheck className="w-3.5 h-3.5" />
-                              Pass QC & Stock In
+                              {t('warehouse.passQcBtn')}
                             </button>
                           ) : (
                             <button
                               onClick={() =>
                                 addToast(
-                                  "Inventory Verified",
-                                  `Item ${item.id} already verified in warehouse location.`,
-                                  "info"
+                                  t('warehouse.toastInventoryVerified'),
+                                  t('warehouse.toastInventoryVerifiedDesc', { id: item.id }),
+                                  'info'
                                 )
                               }
                               className="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-xs font-medium cursor-default ml-auto"
                             >
-                              Stocked In ✅
+                              {t('warehouse.alreadyStocked')}
                             </button>
                           )}
                         </td>
@@ -261,7 +262,7 @@ export function WarehouseWoHub() {
             <div className="flex items-center gap-2 pb-4 mb-4 border-b border-slate-100">
               <PackageCheck className="w-5 h-5 text-indigo-600" />
               <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-                Work Order Material Issue Form (Xuất Kho theo WO)
+                {t('warehouse.issueFormTitle')}
               </h2>
             </div>
 
@@ -270,7 +271,7 @@ export function WarehouseWoHub() {
                 {/* WO Code */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Work Order Code (WO) *
+                    {t('warehouse.woCodeLabel')}
                   </label>
                   <input
                     type="text"
@@ -284,7 +285,7 @@ export function WarehouseWoHub() {
                 {/* Target Spare Part Code */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Target Spare Part Code *
+                    {t('warehouse.targetItemLabel')}
                   </label>
                   <select
                     value={targetItemCode}
@@ -309,7 +310,7 @@ export function WarehouseWoHub() {
                 {/* Line */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Destination Line
+                    {t('warehouse.destinationLineLabel')}
                   </label>
                   <input
                     type="text"
@@ -322,7 +323,7 @@ export function WarehouseWoHub() {
                 {/* Issue Cost */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Calculated Issue Cost
+                    {t('warehouse.calculatedCostLabel')}
                   </label>
                   <div className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono font-bold text-slate-800">
                     ${((selectedItemData?.unitPrice || 45) * Number(actualIssuedQty)).toFixed(2)} USD
@@ -334,7 +335,7 @@ export function WarehouseWoHub() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Requested Quantity (From Requisition)
+                    {t('warehouse.requestedQtyLabel')}
                   </label>
                   <input
                     type="number"
@@ -348,9 +349,11 @@ export function WarehouseWoHub() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-xs font-semibold text-slate-700">
-                      Actual Issued Quantity *
+                      {t('warehouse.actualIssuedQtyLabel')}
                     </label>
-                    <span className="text-[10px] text-slate-400">Physical Dispense</span>
+                    <span className="text-[10px] text-slate-400">
+                      {t('warehouse.physicalDispense')}
+                    </span>
                   </div>
                   <input
                     type="number"
@@ -365,13 +368,13 @@ export function WarehouseWoHub() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Issue Reason / Maintenance Note *
+                    {t('warehouse.issueReasonLabel')}
                   </label>
                   <input
                     type="text"
                     value={issueReason}
                     onChange={(e) => setIssueReason(e.target.value)}
-                    placeholder="Enter maintenance justification..."
+                    placeholder={t('warehouse.issueReasonPlaceholder')}
                     className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none"
                   />
                 </div>
@@ -384,13 +387,21 @@ export function WarehouseWoHub() {
                     <AlertTriangle className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
                     <div>
                       <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
-                        ⚠️ Issue Quantity Mismatch Detected: Missing {missingCount} pcs compared to original request
+                        {t('warehouse.mismatchTitle', { count: missingCount })}
                       </h4>
                       <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                        Original request was for <strong>{requestedQty} pcs</strong>, but only <strong>{actualIssuedQty} pcs</strong> are being dispensed. Likely issued by another maintenance shift or bin count discrepancy.
+                        {language === 'vi' ? (
+                          <>
+                            Yêu cầu ban đầu là <strong>{requestedQty} cái</strong>, nhưng chỉ xuất <strong>{actualIssuedQty} cái</strong>. Có thể đã được ca bảo trì khác xuất hoặc do lệch tồn kho thực tế.
+                          </>
+                        ) : (
+                          <>
+                            Original request was for <strong>{requestedQty} pcs</strong>, but only <strong>{actualIssuedQty} pcs</strong> are being dispensed. Likely issued by another maintenance shift or bin count discrepancy.
+                          </>
+                        )}
                       </p>
                       <div className="mt-2 text-[11px] font-semibold text-amber-900 bg-amber-100/70 px-2.5 py-1 rounded inline-block">
-                        Discrepancy audit log will be attached to Work Order {woCode}.
+                        {t('warehouse.mismatchAudit', { woCode })}
                       </div>
                     </div>
                   </div>
@@ -403,7 +414,7 @@ export function WarehouseWoHub() {
                   className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
                 >
                   <PackageCheck className="w-4 h-4" />
-                  Execute Stock Issue & Deduct Warehouse Inventory
+                  {t('warehouse.issueStockBtn')}
                 </button>
               </div>
             </form>
@@ -415,11 +426,11 @@ export function WarehouseWoHub() {
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-indigo-600" />
                 <h3 className="text-sm font-bold text-slate-900">
-                  Recent Work Order Issue Transactions
+                  {t('warehouse.workOrderLogTitle')}
                 </h3>
               </div>
               <span className="text-xs text-slate-500 font-mono">
-                {workOrders.length} logged issues
+                {t('warehouse.loggedIssuesCount', { count: workOrders.length })}
               </span>
             </div>
 
@@ -427,13 +438,13 @@ export function WarehouseWoHub() {
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-100/60 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                    <th className="py-3 px-4">WO Code</th>
-                    <th className="py-3 px-4">Item & Code</th>
-                    <th className="py-3 px-4">Destination Line</th>
-                    <th className="py-3 px-4">Requested vs Issued</th>
-                    <th className="py-3 px-4">Issue Cost</th>
-                    <th className="py-3 px-4">Issuer & Timestamp</th>
-                    <th className="py-3 px-4">Issue Status & Warnings</th>
+                    <th className="py-3 px-4">{t('warehouse.thWoCode')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thWoItem')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thDestinationLine')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thRequestedVsIssued')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thCost')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thIssuedBy')}</th>
+                    <th className="py-3 px-4">{t('warehouse.thWoStatus')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -453,7 +464,7 @@ export function WarehouseWoHub() {
                         <span className={wo.issuedQty < wo.requestedQty ? 'text-amber-600' : 'text-emerald-600'}>
                           {wo.issuedQty}
                         </span>{' '}
-                        / {wo.requestedQty} pcs
+                        / {wo.requestedQty} {language === 'vi' ? 'cái' : 'pcs'}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-slate-800">
                         {wo.issueCost}
@@ -464,11 +475,13 @@ export function WarehouseWoHub() {
                       </td>
                       <td className="py-3.5 px-4">
                         <Badge variant={wo.mismatchWarning ? 'warning' : 'success'}>
-                          {wo.status}
+                          {translateStatus(wo.status)}
                         </Badge>
                         {wo.mismatchWarning && (
                           <div className="text-[10px] text-amber-700 mt-1 max-w-xs leading-snug">
-                            {wo.mismatchWarning}
+                            {language === 'vi'
+                              ? '⚠️ Lệch số lượng xuất: Thiếu 2 cái so với yêu cầu ban đầu (Có thể do ca khác đã xuất).'
+                              : wo.mismatchWarning}
                           </div>
                         )}
                       </td>

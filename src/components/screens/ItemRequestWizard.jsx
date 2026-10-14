@@ -2,25 +2,17 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { EMS_CATALOG } from '../../data/mockData';
 import {
-  FilePlus2,
   Cpu,
   Search,
   AlertTriangle,
   CheckCircle2,
-  Calendar,
-  Layers,
-  ArrowRight,
-  ShieldAlert,
-  Info,
   Package,
-  Clock,
-  Sparkles,
   RefreshCw
 } from 'lucide-react';
 import { Badge } from '../common/Badge';
 
 export function ItemRequestWizard() {
-  const { addItemRequest, setActiveTab, addToast } = useApp();
+  const { addItemRequest, setActiveTab, addToast, t, language, translateStatus } = useApp();
 
   // Form State
   const [purchaseReason, setPurchaseReason] = useState('Routine Maintenance');
@@ -101,14 +93,18 @@ export function ItemRequestWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!logicRationale.trim()) {
-      addToast("Validation Warning", "Please provide a logic explanation / calculation rationale.", "warning");
+      addToast(
+        language === 'vi' ? "Cảnh báo hợp lệ" : "Validation Warning",
+        language === 'vi' ? "Vui lòng nhập giải trình căn cứ kỹ thuật / công thức tính toán." : "Please provide a logic explanation / calculation rationale.",
+        "warning"
+      );
       return;
     }
 
     if (hasInterlock && !isBypassChecked) {
       addToast(
-        "Interlock Violation Blocked",
-        "Stock is currently available in the warehouse! Check the bypass box or create a Material Issue request instead.",
+        language === 'vi' ? "Chặn vi phạm Khóa liên động" : "Interlock Violation Blocked",
+        language === 'vi' ? "Kho đang có sẵn hàng khả dụng! Vui lòng chọn vượt rào cản hoặc tạo lệnh xuất kho WO." : "Stock is currently available in the warehouse! Check the bypass box or create a Material Issue request instead.",
         "danger"
       );
       return;
@@ -126,7 +122,7 @@ export function ItemRequestWizard() {
       priceStatus: "Quoted",
       unitPrice: fetchedEmsData ? fetchedEmsData.unitPrice : 75,
       previousPrice: fetchedEmsData ? fetchedEmsData.unitPrice : 75,
-      interlockStatus: hasInterlock ? `⚠️ ${fetchedEmsData.stockAvailable} pcs Stock Found` : "OK",
+      interlockStatus: hasInterlock ? (language === 'vi' ? `⚠️ Còn ${fetchedEmsData.stockAvailable} cái trong kho` : `⚠️ ${fetchedEmsData.stockAvailable} pcs Stock Found`) : "OK",
       availableStock: fetchedEmsData ? fetchedEmsData.stockAvailable : 0,
       requestedQty: Number(requestedQty),
       unit,
@@ -148,14 +144,14 @@ export function ItemRequestWizard() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Spare Part Registration Wizard
+              {t('wizard.title')}
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
               Form 102-EMS
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-            Register new spare parts, verify master EMS item parameters, run live warehouse interlock detection, and route request to PIC Review.
+            {t('wizard.subtitle')}
           </p>
         </div>
 
@@ -163,7 +159,7 @@ export function ItemRequestWizard() {
           onClick={() => setActiveTab('workspace')}
           className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
         >
-          Cancel & Return
+          {t('common.cancel')}
         </button>
       </div>
 
@@ -175,7 +171,7 @@ export function ItemRequestWizard() {
               1
             </span>
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-              Classification & Factory Location
+              {language === 'vi' ? '1. Phân loại & Vị trí Lắp đặt Nhà máy' : '1. Classification & Factory Location'}
             </h2>
           </div>
 
@@ -183,42 +179,40 @@ export function ItemRequestWizard() {
             {/* Purchase Reason */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Purchase Reason *
+                {t('wizard.purchaseReason')}
               </label>
               <select
                 value={purchaseReason}
                 onChange={(e) => setPurchaseReason(e.target.value)}
                 className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
               >
-                <option value="Routine Maintenance">Routine Maintenance</option>
-                <option value="Breakdown Replacement">Breakdown Replacement</option>
-                <option value="Line Improvement">Line Improvement</option>
-                <option value="Safety Standard Compliance">Safety Standard Compliance</option>
+                <option value="Routine Maintenance">{t('reasons.Routine Maintenance')}</option>
+                <option value="Breakdown Replacement">{t('reasons.Breakdown Replacement')}</option>
+                <option value="Line Improvement">{t('reasons.Line Improvement')}</option>
+                <option value="Preventive Maintenance">{t('reasons.Preventive Maintenance')}</option>
               </select>
             </div>
 
             {/* Category */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Category *
+                {t('common.category')} *
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
               >
-                <option value="Mechanical">Mechanical</option>
-                <option value="Electrical">Electrical</option>
-                <option value="Pneumatic">Pneumatic</option>
-                <option value="Consumables">Consumables</option>
-                <option value="Hydraulics">Hydraulics</option>
+                <option value="Mechanical">{t('categories.Mechanical')}</option>
+                <option value="Electrical">{t('categories.Electrical')}</option>
+                <option value="Pneumatic">{t('categories.Pneumatic')}</option>
               </select>
             </div>
 
             {/* Process */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Target Process *
+                {t('wizard.processName')}
               </label>
               <input
                 type="text"
@@ -232,7 +226,7 @@ export function ItemRequestWizard() {
             {/* Line Number */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Line Number *
+                {t('wizard.targetLine')}
               </label>
               <select
                 value={lineNumber}
@@ -257,7 +251,7 @@ export function ItemRequestWizard() {
               2
             </span>
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-              Logic & Quantity Calculation Rationale
+              {t('wizard.step2Title')}
             </h2>
           </div>
 
@@ -266,42 +260,46 @@ export function ItemRequestWizard() {
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Logic Explanation / Calculation Rationale *
+                  {t('wizard.calculationLogic')}
                 </label>
                 <span className="text-[11px] text-slate-400">
-                  Required by PIC Code Master
+                  {t('wizard.step2Desc')}
                 </span>
               </div>
               <textarea
                 rows={4}
                 value={logicRationale}
                 onChange={(e) => setLogicRationale(e.target.value)}
-                placeholder="Enter detailed calculation logic, machine frequency, or necessity (e.g. 6-month routine breakdown replacement cycle for component pickup verifier. Prevents false reject alarms on Station 4)..."
+                placeholder={t('wizard.logicPlaceholder')}
                 className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg p-3 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 leading-relaxed font-sans"
               />
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-[10px] text-slate-500">Quick template:</span>
+                <span className="text-[10px] text-slate-500">{t('wizard.quickFormula')}</span>
                 <button
                   type="button"
                   onClick={() =>
                     setLogicRationale(
-                      "Preventive 6-month overhaul cycle. Machine running time logged: 4,200 hrs. Component friction loss exceeds 0.08mm tolerance."
+                      language === 'vi'
+                        ? "Chu kỳ đại tu bảo dưỡng định kỳ 6 tháng. Số giờ chạy máy ghi nhận: 4,200 giờ. Độ mài mòn vượt dung sai 0.08mm."
+                        : "Preventive 6-month overhaul cycle. Machine running time logged: 4,200 hrs. Component friction loss exceeds 0.08mm tolerance."
                     )
                   }
                   className="text-[10px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
                 >
-                  Preventive Overhaul
+                  {language === 'vi' ? 'Đại tu bảo dưỡng' : 'Preventive Overhaul'}
                 </button>
                 <button
                   type="button"
                   onClick={() =>
                     setLogicRationale(
-                      "Emergency breakdown replacement: Station 3 actuator failed to latch fixture causing 22 min line stoppage. Zero spares in line buffer."
+                      language === 'vi'
+                        ? "Thay thế khẩn cấp do hỏng hóc: Xi lanh Trạm 3 mất hành trình kẹp khiến dừng chuyền 22 phút. Đã hết vật tư đệm dự phòng trên chuyền."
+                        : "Emergency breakdown replacement: Station 3 actuator failed to latch fixture causing 22 min line stoppage. Zero spares in line buffer."
                     )
                   }
                   className="text-[10px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
                 >
-                  Emergency Stoppage
+                  {language === 'vi' ? 'Dừng chuyền khẩn cấp' : 'Emergency Stoppage'}
                 </button>
               </div>
             </div>
@@ -310,7 +308,7 @@ export function ItemRequestWizard() {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Quantity Requested *
+                  {t('wizard.requestedQuantity')}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -325,17 +323,15 @@ export function ItemRequestWizard() {
                     onChange={(e) => setUnit(e.target.value)}
                     className="w-24 bg-[#F8FAFC] border border-slate-200 rounded-lg px-2 py-2 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none"
                   >
-                    <option value="Pcs">Pcs</option>
-                    <option value="Set">Set</option>
-                    <option value="Box">Box</option>
-                    <option value="Roll">Roll</option>
+                    <option value="Pcs">{t('common.pcs')}</option>
+                    <option value="Set">{t('common.set')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Expected Date of Use *
+                  {t('wizard.needByDate')}
                 </label>
                 <div className="relative">
                   <input
@@ -358,12 +354,12 @@ export function ItemRequestWizard() {
                 3
               </span>
               <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-                Item Fetching Simulator (EMS Master Catalog)
+                {t('wizard.step1Title')}
               </h2>
             </div>
             <span className="text-xs text-indigo-600 font-medium flex items-center gap-1">
               <Cpu className="w-3.5 h-3.5" />
-              Mock Endpoint: /api/v2/ems/item-master
+              API: /api/v2/ems/item-master
             </span>
           </div>
 
@@ -375,7 +371,7 @@ export function ItemRequestWizard() {
                   type="text"
                   value={itemCodeInput}
                   onChange={(e) => setItemCodeInput(e.target.value)}
-                  placeholder="Enter Item Code (e.g. SP-2024-M08, SP-2024-C01, SP-2024-E12)..."
+                  placeholder={language === 'vi' ? "Nhập mã vật tư (vd: SP-2024-M08, SP-2024-C01, SP-2024-E12)..." : "Enter Item Code (e.g. SP-2024-M08, SP-2024-C01, SP-2024-E12)..."}
                   className="w-full bg-[#F8FAFC] border border-slate-200 rounded-lg pl-3 pr-8 py-2.5 text-xs font-mono font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
                 />
               </div>
@@ -388,12 +384,12 @@ export function ItemRequestWizard() {
                 {isFetchingEms ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    Querying EMS...
+                    {t('wizard.fetching')}
                   </>
                 ) : (
                   <>
                     <Search className="w-4 h-4" />
-                    Load EMS Details
+                    {t('wizard.lookupBtn')}
                   </>
                 )}
               </button>
@@ -401,12 +397,12 @@ export function ItemRequestWizard() {
 
             {/* Quick Pill presets */}
             <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500">
-              <span className="text-[11px] font-medium">Quick Test Codes:</span>
+              <span className="text-[11px] font-medium">{t('wizard.quickExamples')}</span>
               {[
-                { code: 'SP-2024-M08', note: 'Trigger Interlock (5 pcs in stock)' },
-                { code: 'SP-2024-C01', note: 'Normal Active (0 stock)' },
-                { code: 'SP-2024-E12', note: 'Price Risk item' },
-                { code: 'SP-2024-B09', note: 'Stop PO (12 pcs in stock)' }
+                { code: 'SP-2024-M08', note: language === 'vi' ? 'Kích hoạt Khóa liên động (5 cái trong kho)' : 'Trigger Interlock (5 pcs in stock)' },
+                { code: 'SP-2024-C01', note: language === 'vi' ? 'Bình thường (0 tồn kho)' : 'Normal Active (0 stock)' },
+                { code: 'SP-2024-E12', note: language === 'vi' ? 'Rủi ro biến động giá' : 'Price Risk item' },
+                { code: 'SP-2024-B09', note: language === 'vi' ? 'Dừng PO (12 cái trong kho)' : 'Stop PO (12 pcs in stock)' }
               ].map((p) => (
                 <button
                   key={p.code}
@@ -441,7 +437,7 @@ export function ItemRequestWizard() {
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <span className="text-[10px] uppercase font-semibold text-slate-400">
-                        Item Identification
+                        {t('common.itemCode')}
                       </span>
                       <div className="font-mono font-bold text-indigo-600 text-sm mt-0.5">
                         {fetchedEmsData.code}
@@ -453,7 +449,7 @@ export function ItemRequestWizard() {
 
                     <div>
                       <span className="text-[10px] uppercase font-semibold text-slate-400">
-                        Technical Specs
+                        {t('common.specs')}
                       </span>
                       <p className="text-xs text-slate-600 mt-0.5 leading-relaxed line-clamp-2">
                         {fetchedEmsData.specs}
@@ -462,25 +458,25 @@ export function ItemRequestWizard() {
 
                     <div>
                       <span className="text-[10px] uppercase font-semibold text-slate-400">
-                        Order Constraints
+                        {language === 'vi' ? 'Ràng buộc đơn hàng' : 'Order Constraints'}
                       </span>
                       <div className="text-xs text-slate-700 mt-0.5">
-                        <strong>MOQ:</strong> {fetchedEmsData.moq} pcs
+                        <strong>{t('wizard.moq')}:</strong> {fetchedEmsData.moq} {t('common.pcs')}
                       </div>
                       <div className="text-xs text-slate-700">
-                        <strong>Lead Time:</strong> {fetchedEmsData.leadTimeDays} days
+                        <strong>{t('wizard.leadTime')}:</strong> {fetchedEmsData.leadTimeDays} {t('wizard.days')}
                       </div>
                     </div>
 
                     <div>
                       <span className="text-[10px] uppercase font-semibold text-slate-400">
-                        EMS Master Status
+                        {t('common.codeStatus')}
                       </span>
                       <div className="mt-1 flex items-center gap-1.5">
-                        <Badge>{fetchedEmsData.status}</Badge>
+                        <Badge>{translateStatus(fetchedEmsData.status)}</Badge>
                       </div>
                       <div className="text-xs text-slate-700 font-medium mt-1">
-                        Est. Unit: ${fetchedEmsData.unitPrice}
+                        {t('common.unitPrice')}: ${fetchedEmsData.unitPrice}
                       </div>
                     </div>
                   </div>
@@ -500,19 +496,31 @@ export function ItemRequestWizard() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
-                    ⚠️ INTERLOCK DETECTED: Stock Available in Factory Warehouse
+                    {t('wizard.interlockWarningTitle')}
                   </h3>
                   <span className="px-2 py-0.2 text-[10px] font-bold rounded-full bg-amber-200 text-amber-900">
-                    High Cost Efficiency Gate
+                    {language === 'vi' ? 'Cổng kiểm soát chi phí' : 'High Cost Efficiency Gate'}
                   </span>
                 </div>
                 <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                  Stock is currently available in{' '}
-                  <strong className="font-semibold text-amber-950">
-                    {fetchedEmsData.stockLocation} ({fetchedEmsData.stockAvailable} pcs available)
-                  </strong>
-                  . Enterprise policy mandates submitting a{' '}
-                  <strong>Material Issue Request (Xuất Kho theo WO)</strong> before placing a new purchase requisition.
+                  {language === 'vi' ? (
+                    <>
+                      Hiện đang có sẵn <strong>{fetchedEmsData.stockAvailable} cái</strong> tại{' '}
+                      <strong className="font-semibold text-amber-950">
+                        {fetchedEmsData.stockLocation}
+                      </strong>
+                      . Quy trình doanh nghiệp yêu cầu bắt buộc xuất hàng tồn kho theo lệnh WO trước khi tạo đơn mua sắm mới.
+                    </>
+                  ) : (
+                    <>
+                      Stock is currently available in{' '}
+                      <strong className="font-semibold text-amber-950">
+                        {fetchedEmsData.stockLocation} ({fetchedEmsData.stockAvailable} pcs available)
+                      </strong>
+                      . Enterprise policy mandates submitting a{' '}
+                      <strong>Material Issue Request (Xuất Kho theo WO)</strong> before placing a new purchase requisition.
+                    </>
+                  )}
                 </p>
 
                 {/* Quick actions for interlock */}
@@ -523,7 +531,7 @@ export function ItemRequestWizard() {
                     className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors flex items-center gap-1.5"
                   >
                     <Package className="w-3.5 h-3.5" />
-                    Go to Warehouse Work Order Issue
+                    {language === 'vi' ? 'Chuyển sang màn hình Xuất kho WO' : 'Go to Warehouse Work Order Issue'}
                   </button>
 
                   <label className="flex items-center gap-2 text-xs text-amber-900 font-medium cursor-pointer">
@@ -533,7 +541,7 @@ export function ItemRequestWizard() {
                       onChange={(e) => setIsBypassChecked(e.target.checked)}
                       className="rounded border-amber-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span>Bypass with Line Leader Emergency Justification</span>
+                    <span>{t('wizard.bypassOption')}</span>
                   </label>
                 </div>
 
@@ -543,7 +551,7 @@ export function ItemRequestWizard() {
                       type="text"
                       value={bypassJustification}
                       onChange={(e) => setBypassJustification(e.target.value)}
-                      placeholder="Enter Line Leader name & emergency override reason (e.g. Line 05 buffer stock reserved for Night Shift overhaul)..."
+                      placeholder={t('wizard.bypassPlaceholder')}
                       className="w-full bg-white border border-amber-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
@@ -560,7 +568,7 @@ export function ItemRequestWizard() {
             onClick={() => setActiveTab('workspace')}
             className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-medium transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
 
           <button
@@ -568,7 +576,7 @@ export function ItemRequestWizard() {
             className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-md hover:shadow-lg transition-all"
           >
             <CheckCircle2 className="w-4 h-4" />
-            Submit Request to PIC Review Hub
+            {t('wizard.submitRequest')}
           </button>
         </div>
       </form>

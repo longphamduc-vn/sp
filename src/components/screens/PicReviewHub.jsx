@@ -27,7 +27,10 @@ export function PicReviewHub() {
     setIsCreateTaskModalOpen,
     setTaskTargetItem,
     advancePoStage,
-    addToast
+    addToast,
+    t,
+    language,
+    translateStatus
   } = useApp();
 
   const [selectedIds, setSelectedIds] = useState([]);
@@ -53,12 +56,18 @@ export function PicReviewHub() {
   // Bulk Create EMS Quote Request
   const handleBulkQuoteRequest = () => {
     if (selectedIds.length === 0) {
-      addToast("Selection Required", "Please select at least one item from the grid.", "warning");
+      addToast(
+        language === 'vi' ? "Yêu cầu chọn vật tư" : "Selection Required",
+        language === 'vi' ? "Vui lòng chọn ít nhất một vật tư từ danh sách." : "Please select at least one item from the grid.",
+        "warning"
+      );
       return;
     }
     addToast(
-      "EMS Quotation Batch Dispatched",
-      `Dispatched bulk RFQ tickets to EMS Procurement portal for ${selectedIds.length} items (${selectedIds.slice(0, 3).join(', ')}${selectedIds.length > 3 ? '...' : ''}).`,
+      language === 'vi' ? "Đã gửi báo giá EMS hàng loạt" : "EMS Quotation Batch Dispatched",
+      language === 'vi'
+        ? `Đã chuyển yêu cầu RFQ tới cổng mua sắm EMS cho ${selectedIds.length} vật tư (${selectedIds.slice(0, 3).join(', ')}${selectedIds.length > 3 ? '...' : ''}).`
+        : `Dispatched bulk RFQ tickets to EMS Procurement portal for ${selectedIds.length} items (${selectedIds.slice(0, 3).join(', ')}${selectedIds.length > 3 ? '...' : ''}).`,
       "success"
     );
     setSelectedIds([]);
@@ -85,14 +94,14 @@ export function PicReviewHub() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              PIC Review Hub (Code Master & RFQ Validation)
+              {t('pic.title')}
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-blue-50 text-blue-700 border border-blue-200">
               Interactive Workspace
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-            Verify SAP/EMS active catalog status, detect obsolete 2-year inactive part numbers, dispatch RFQ quote requests, and assign clarification tasks to line requestors.
+            {t('pic.subtitle')}
           </p>
         </div>
 
@@ -103,7 +112,7 @@ export function PicReviewHub() {
             className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold shadow-2xs transition-colors"
           >
             <RefreshCw className="w-4 h-4 text-indigo-600" />
-            🔄 Refresh Code Status (EMS)
+            {t('pic.syncMasterCodes')}
           </button>
 
           <button
@@ -111,7 +120,7 @@ export function PicReviewHub() {
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
           >
             <Mail className="w-4 h-4" />
-            ✉️ Bulk Create EMS Quote Request ({selectedIds.length})
+            {t('pic.bulkQuoteBtn')} ({selectedIds.length})
           </button>
         </div>
       </div>
@@ -136,29 +145,29 @@ export function PicReviewHub() {
           <div className="flex items-center gap-3 flex-wrap text-xs">
             <div className="flex items-center gap-1.5 text-slate-500">
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Code Status:</span>
+              <span>{t('pic.filterCodeStatus')}:</span>
               <select
                 value={filterCodeStatus}
                 onChange={(e) => setFilterCodeStatus(e.target.value)}
                 className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs text-slate-800 focus:outline-none"
               >
-                <option value="ALL">All Codes</option>
-                <option value="ACTIVE">Active Only</option>
-                <option value="STOP_PO">Stop PO (2 Years Inactive)</option>
+                <option value="ALL">{t('pic.allCodes')}</option>
+                <option value="ACTIVE">{t('pic.activeOnly')}</option>
+                <option value="STOP_PO">{t('pic.stopPoOnly')}</option>
               </select>
             </div>
 
             <div className="flex items-center gap-1.5 text-slate-500">
-              <span>Price Filter:</span>
+              <span>{t('pic.filterPriceStatus')}:</span>
               <select
                 value={filterPriceStatus}
                 onChange={(e) => setFilterPriceStatus(e.target.value)}
                 className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs text-slate-800 focus:outline-none"
               >
-                <option value="ALL">All Price Status</option>
-                <option value="NEED_REVISE">Need Revise</option>
-                <option value="PRICE_RISK">Price Risk</option>
-                <option value="UNQUOTED">Unquoted</option>
+                <option value="ALL">{t('pic.allPrices')}</option>
+                <option value="NEED_REVISE">{t('pic.needReviseOnly')}</option>
+                <option value="PRICE_RISK">{t('pic.priceRiskOnly')}</option>
+                <option value="UNQUOTED">{t('pic.unquotedOnly')}</option>
               </select>
             </div>
           </div>
@@ -179,14 +188,14 @@ export function PicReviewHub() {
                     className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   />
                 </th>
-                <th className="py-3 px-4">Item Code</th>
-                <th className="py-3 px-4 min-w-[200px]">Specs & Preview</th>
-                <th className="py-3 px-4">Line / Process</th>
-                <th className="py-3 px-4 max-w-sm">Logic Justification</th>
-                <th className="py-3 px-4">Code Status</th>
-                <th className="py-3 px-4">Price Status</th>
-                <th className="py-3 px-4">Interlock Check</th>
-                <th className="py-3 px-4 text-right">Row Actions</th>
+                <th className="py-3 px-4">{t('pic.thItem')}</th>
+                <th className="py-3 px-4 min-w-[200px]">{t('common.specs')}</th>
+                <th className="py-3 px-4">{t('common.line')}</th>
+                <th className="py-3 px-4 max-w-sm">{t('pic.thLogic')}</th>
+                <th className="py-3 px-4">{t('pic.thCodeStatus')}</th>
+                <th className="py-3 px-4">{t('pic.thPriceStatus')}</th>
+                <th className="py-3 px-4">{t('pic.thInterlock')}</th>
+                <th className="py-3 px-4 text-right">{t('pic.thActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -246,7 +255,7 @@ export function PicReviewHub() {
                             {item.specs}
                           </div>
                           <div className="text-[10px] text-slate-400">
-                            Vendor: {item.vendor || 'Master EMS Vendor'}
+                            {t('common.vendor')}: {item.vendor || 'Master EMS Vendor'}
                           </div>
                         </div>
                       </div>
@@ -257,7 +266,7 @@ export function PicReviewHub() {
                       <div className="font-medium text-slate-800">{item.line}</div>
                       <div className="text-[11px] text-slate-500">{item.process}</div>
                       <div className="text-[10px] text-slate-400 mt-0.5">
-                        Req: {item.requestor}
+                        {t('common.requestor')}: {item.requestor}
                       </div>
                     </td>
 
@@ -276,23 +285,23 @@ export function PicReviewHub() {
                         onClick={() => setExpandedLogicId(isExpanded ? null : item.id)}
                         className="text-[10px] text-indigo-600 hover:text-indigo-800 mt-1 font-medium"
                       >
-                        {isExpanded ? 'Collapse ▲' : 'Read full rationale ▼'}
+                        {isExpanded ? t('pic.showLess') : t('pic.showMore')}
                       </button>
                     </td>
 
                     {/* Code Status */}
                     <td className="py-3 px-4">
-                      <Badge>{item.codeStatus}</Badge>
+                      <Badge>{translateStatus(item.codeStatus)}</Badge>
                       {isStopPo && (
                         <div className="text-[10px] text-red-600 mt-1 font-semibold">
-                          Inactive 730+ Days
+                          {language === 'vi' ? 'Ngưng dùng > 730 ngày' : 'Inactive 730+ Days'}
                         </div>
                       )}
                     </td>
 
                     {/* Price Status */}
                     <td className="py-3 px-4">
-                      <Badge>{item.priceStatus}</Badge>
+                      <Badge>{translateStatus(item.priceStatus)}</Badge>
                       <div className="text-[11px] font-semibold text-slate-800 mt-1">
                         ${item.unitPrice} / {item.unit}
                       </div>
@@ -303,7 +312,7 @@ export function PicReviewHub() {
                       <Badge>{item.interlockStatus}</Badge>
                       {item.availableStock > 0 && (
                         <div className="text-[10px] text-amber-700 mt-1">
-                          {item.stockLocation || 'Warehouse Stock'}
+                          {item.stockLocation || (language === 'vi' ? 'Tồn kho khả dụng' : 'Warehouse Stock')}
                         </div>
                       )}
                     </td>
@@ -318,7 +327,7 @@ export function PicReviewHub() {
                             className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded font-semibold text-[11px] transition-colors flex items-center gap-1 shadow-2xs whitespace-nowrap"
                           >
                             <Mail className="w-3 h-3 text-amber-700" />
-                            Request Active Code (Master Code)
+                            {t('pic.requestCodeActive')}
                           </button>
                         )}
 
@@ -329,7 +338,7 @@ export function PicReviewHub() {
                             className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded font-semibold text-[11px] transition-colors flex items-center gap-1 shadow-2xs whitespace-nowrap"
                           >
                             <Send className="w-3 h-3 text-red-600" />
-                            Send Revise Email to Purchaser
+                            {t('pic.sendReviseEmail')}
                           </button>
                         )}
 
@@ -344,7 +353,7 @@ export function PicReviewHub() {
                             title="Create Clarification Task for Requestor"
                           >
                             <MessageSquarePlus className="w-3.5 h-3.5 text-indigo-600" />
-                            Clarify Logic
+                            {t('pic.requestClarification')}
                           </button>
 
                           <button
@@ -353,7 +362,7 @@ export function PicReviewHub() {
                             title="Approve & Send to PO Request"
                           >
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                            Approve
+                            {language === 'vi' ? 'Duyệt PO' : 'Approve'}
                           </button>
                         </div>
                       </div>

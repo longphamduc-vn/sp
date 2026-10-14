@@ -21,7 +21,11 @@ export function MonthlyAppraisalHub() {
     appraisal,
     exportExcelReport,
     setIsManagementModalOpen,
-    filteredItems
+    filteredItems,
+    t,
+    language,
+    translateCategory,
+    translateStatus
   } = useApp();
 
   const totalPlan = appraisal.totalBudgetPlan || 45000;
@@ -37,14 +41,14 @@ export function MonthlyAppraisalHub() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Monthly Appraisal & Management Export Hub
+              {t('appraisal.title')}
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
-              October 2026 Cycle
+              {t('appraisal.cycleTitle')}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-            Consolidate plant-wide spare part procurement allocations, conduct leadership budget appraisal, export spreadsheets for executive committee, and record signed meeting results.
+            {t('appraisal.subtitle')}
           </p>
         </div>
 
@@ -55,7 +59,7 @@ export function MonthlyAppraisalHub() {
             className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold shadow-2xs transition-colors"
           >
             <Download className="w-4 h-4 text-emerald-600" />
-            📥 Export Excel for Management Review
+            📥 {t('appraisal.exportExcelBtn')}
           </button>
 
           <button
@@ -63,7 +67,7 @@ export function MonthlyAppraisalHub() {
             className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
           >
             <FileCheck2 className="w-4 h-4" />
-            📝 Input Management Result (Manual)
+            📝 {t('appraisal.inputResultBtn')}
           </button>
         </div>
       </div>
@@ -74,7 +78,7 @@ export function MonthlyAppraisalHub() {
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-subtle">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Total Monthly Budget Plan
+              {t('appraisal.kpiTotalBudget')}
             </span>
             <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
               <DollarSign className="w-4 h-4" />
@@ -92,7 +96,7 @@ export function MonthlyAppraisalHub() {
           {/* Visual Progress Bar */}
           <div className="mt-4 space-y-1.5">
             <div className="flex justify-between text-xs">
-              <span className="text-slate-600 font-medium">Budget Consumed</span>
+              <span className="text-slate-600 font-medium">{t('appraisal.kpiBudgetConsumed')}</span>
               <span
                 className={`font-mono font-bold ${
                   percentUtilized > 90 ? 'text-red-600' : 'text-indigo-600'
@@ -112,8 +116,8 @@ export function MonthlyAppraisalHub() {
               />
             </div>
             <div className="flex justify-between text-[10px] text-slate-400 pt-0.5">
-              <span>Remaining: ${(totalPlan - actualCost).toLocaleString()}</span>
-              <span>Ceiling: $45,000</span>
+              <span>{language === 'vi' ? 'Còn lại' : 'Remaining'}: ${(totalPlan - actualCost).toLocaleString()}</span>
+              <span>{language === 'vi' ? 'Hạn mức' : 'Ceiling'}: $45,000</span>
             </div>
           </div>
         </div>
@@ -122,7 +126,7 @@ export function MonthlyAppraisalHub() {
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-subtle">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Over-budget Flagged Items
+              {t('appraisal.kpiOverbudgetItems')}
             </span>
             <div className="p-2 rounded-lg bg-red-50 text-red-600">
               <AlertCircle className="w-4 h-4" />
@@ -133,15 +137,17 @@ export function MonthlyAppraisalHub() {
               {appraisal.overbudgetCount}
             </span>
             <span className="text-xs font-semibold text-red-600/80">
-              Lines Triggering Cost Variance
+              {language === 'vi' ? 'Chuyền phát sinh biến động chi phí' : 'Lines Triggering Cost Variance'}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-            Coating Line 01 exceeded planned ceiling by <strong>+12.5%</strong> due to inverter & bearing emergency spares.
+            {language === 'vi'
+              ? 'Chuyền Sơn phủ Line 01 vượt hạn mức định kỳ +12.5% do thay thế biến tần & vòng bi sự cố khẩn cấp.'
+              : 'Coating Line 01 exceeded planned ceiling by +12.5% due to inverter & bearing emergency spares.'}
           </p>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-xs text-red-600 font-medium">
             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            Requires Executive Committee Sign-off
+            {language === 'vi' ? 'Yêu cầu Hội đồng Điều hành ký duyệt' : 'Requires Executive Committee Sign-off'}
           </div>
         </div>
 
@@ -149,7 +155,7 @@ export function MonthlyAppraisalHub() {
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-subtle">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Management Review Status
+              {t('appraisal.kpiReviewStatus')}
             </span>
             <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
               <FileCheck2 className="w-4 h-4" />
@@ -157,7 +163,9 @@ export function MonthlyAppraisalHub() {
           </div>
           <div className="mt-2">
             <div className="text-lg font-bold text-slate-900">
-              {appraisal.reviewStatus}
+              {appraisal.reviewStatus === 'Pending Management Sign-off'
+                ? t('appraisal.pendingSignOff')
+                : appraisal.reviewStatus}
             </div>
             {appraisal.meetingMinutesFile ? (
               <div className="mt-2 p-2 bg-slate-50 rounded border border-slate-200 flex items-center gap-2 text-xs text-indigo-700">
@@ -168,13 +176,15 @@ export function MonthlyAppraisalHub() {
               </div>
             ) : (
               <p className="text-xs text-slate-400 mt-1">
-                No signed minutes attached yet. Click "Input Management Result" to upload.
+                {language === 'vi'
+                  ? 'Chưa đính kèm biên bản đã ký. Nhấp "Nhập Kết Quả Ký Duyệt" để tải lên.'
+                  : 'No signed minutes attached yet. Click "Input Management Result" to upload.'}
               </p>
             )}
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Executive Chair: Production Director</span>
-            <span className="text-indigo-600 font-medium">Quorum Met</span>
+            <span>{language === 'vi' ? 'Chủ trì: Giám đốc Khối Sản xuất' : 'Executive Chair: Production Director'}</span>
+            <span className="text-indigo-600 font-medium">{language === 'vi' ? 'Đã đủ biểu quyết' : 'Quorum Met'}</span>
           </div>
         </div>
       </div>
@@ -183,7 +193,7 @@ export function MonthlyAppraisalHub() {
       <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-subtle">
         <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
           <Building2 className="w-4 h-4 text-indigo-600" />
-          Factory Department Allocations & Line Utilization
+          {t('appraisal.departmentBreakdown')}
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -201,7 +211,9 @@ export function MonthlyAppraisalHub() {
                     {dept.name}
                   </span>
                   <Badge variant={isDeptOver ? 'danger' : 'success'}>
-                    {dept.status}
+                    {isDeptOver
+                      ? (language === 'vi' ? 'Vượt định mức (+12.5%)' : dept.status)
+                      : (language === 'vi' ? 'Trong định mức' : dept.status)}
                   </Badge>
                 </div>
 
@@ -210,7 +222,7 @@ export function MonthlyAppraisalHub() {
                     ${dept.requested.toLocaleString()}
                   </span>
                   <span className="text-[11px] text-slate-500 font-mono">
-                    Plan: ${dept.allocated.toLocaleString()}
+                    {language === 'vi' ? 'Kế hoạch:' : 'Plan:'} ${dept.allocated.toLocaleString()}
                   </span>
                 </div>
 
@@ -224,8 +236,8 @@ export function MonthlyAppraisalHub() {
                 </div>
 
                 <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400">
-                  <span>{dept.count} Requisitions</span>
-                  <span>{pct}% utilized</span>
+                  <span>{dept.count} {language === 'vi' ? 'Yêu cầu' : 'Requisitions'}</span>
+                  <span>{pct}% {language === 'vi' ? 'đã dùng' : 'utilized'}</span>
                 </div>
               </div>
             );
@@ -238,10 +250,12 @@ export function MonthlyAppraisalHub() {
         <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
           <div>
             <h3 className="text-sm font-bold text-slate-900">
-              Spare Part Appraisal Detail Ledger
+              {t('appraisal.itemsRequiringAppraisal')}
             </h3>
             <p className="text-xs text-slate-500">
-              Items included in current monthly procurement evaluation
+              {language === 'vi'
+                ? 'Các linh kiện nằm trong diện đánh giá mua sắm tháng hiện tại'
+                : 'Items included in current monthly procurement evaluation'}
             </p>
           </div>
           <button
@@ -249,7 +263,7 @@ export function MonthlyAppraisalHub() {
             className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            Download Complete Ledger (.csv)
+            {language === 'vi' ? 'Tải toàn bộ bảng tính (.csv)' : 'Download Complete Ledger (.csv)'}
           </button>
         </div>
 
@@ -257,14 +271,14 @@ export function MonthlyAppraisalHub() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-100/60 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4">Item Code</th>
-                <th className="py-3 px-4">Spare Part Name</th>
-                <th className="py-3 px-4">Line Number</th>
-                <th className="py-3 px-4">Requested Qty</th>
-                <th className="py-3 px-4">Unit Cost</th>
-                <th className="py-3 px-4">Total Request</th>
-                <th className="py-3 px-4">Budget Impact</th>
-                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">{t('common.itemCode')}</th>
+                <th className="py-3 px-4">{t('common.itemName')}</th>
+                <th className="py-3 px-4">{t('common.line')}</th>
+                <th className="py-3 px-4">{t('common.qty')}</th>
+                <th className="py-3 px-4">{t('common.unitPrice')}</th>
+                <th className="py-3 px-4">{t('common.totalCost')}</th>
+                <th className="py-3 px-4">{language === 'vi' ? 'Đánh giá ngân sách' : 'Budget Impact'}</th>
+                <th className="py-3 px-4">{t('common.status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -279,7 +293,7 @@ export function MonthlyAppraisalHub() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="font-semibold text-slate-900">{item.name}</div>
-                      <div className="text-[10px] text-slate-400">{item.category}</div>
+                      <div className="text-[10px] text-slate-400">{translateCategory(item.category)}</div>
                     </td>
                     <td className="py-3 px-4 text-slate-700">{item.line}</td>
                     <td className="py-3 px-4 font-mono">
@@ -292,16 +306,16 @@ export function MonthlyAppraisalHub() {
                     <td className="py-3 px-4">
                       {isOverItem ? (
                         <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-red-100 text-red-700">
-                          🔴 Variance Alert
+                          {language === 'vi' ? '🔴 Cảnh báo lệch giá' : '🔴 Variance Alert'}
                         </span>
                       ) : (
                         <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-emerald-50 text-emerald-700">
-                          Within Standard
+                          {language === 'vi' ? 'Trong chuẩn' : 'Within Standard'}
                         </span>
                       )}
                     </td>
                     <td className="py-3 px-4">
-                      <Badge>{item.status}</Badge>
+                      <Badge>{translateStatus(item.status)}</Badge>
                     </td>
                   </tr>
                 );

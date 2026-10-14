@@ -11,11 +11,12 @@ import {
   Clock,
   ExternalLink,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  Camera
 } from 'lucide-react';
 import { Badge } from './Badge';
 
-export function Header() {
+export function Header({ onOpenAutoCapture }) {
   const {
     activeRole,
     setActiveRole,
@@ -23,7 +24,10 @@ export function Header() {
     setSearchQuery,
     notifications,
     unreadNotificationsCount,
-    setActiveTab
+    setActiveTab,
+    language,
+    setLanguage,
+    t
   } = useApp();
 
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
@@ -34,27 +38,27 @@ export function Header() {
   const roles = [
     {
       id: 'Requestor',
-      label: 'Requestor (Engineer)',
-      desc: 'Create requests, reply to logic clarifications, track user items',
-      badge: 'Creator'
+      label: t('roles.Requestor.label'),
+      desc: t('roles.Requestor.desc'),
+      badge: t('roles.Requestor.badge')
     },
     {
       id: 'PIC Review',
-      label: 'PIC Review (Code Master)',
-      desc: 'Active code validation, EMS quotation dispatch, logic approval',
-      badge: 'Specialist'
+      label: t('roles.PIC Review.label'),
+      desc: t('roles.PIC Review.desc'),
+      badge: t('roles.PIC Review.badge')
     },
     {
       id: 'Leader / Management',
-      label: 'Leader / Management',
-      desc: 'Budget appraisal review, executive sign-off, downtime analytics',
-      badge: 'Executive'
+      label: t('roles.Leader / Management.label'),
+      desc: t('roles.Leader / Management.desc'),
+      badge: t('roles.Leader / Management.badge')
     },
     {
       id: 'Warehouse Keeper',
-      label: 'Warehouse Keeper',
-      desc: 'Goods receipt QC validation, work order stock issue & interlock control',
-      badge: 'Operations'
+      label: t('roles.Warehouse Keeper.label'),
+      desc: t('roles.Warehouse Keeper.desc'),
+      badge: t('roles.Warehouse Keeper.badge')
     }
   ];
 
@@ -82,7 +86,7 @@ export function Header() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Global Search (Item Code, PO#, Requestor, WO#)..."
+            placeholder={t('common.searchPlaceholder')}
             className="w-full pl-9 pr-8 py-1.5 bg-[#F8FAFC] hover:bg-slate-100/80 focus:bg-white text-xs text-slate-800 placeholder-slate-400 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
           />
           {searchQuery && (
@@ -99,12 +103,56 @@ export function Header() {
       {/* Role Banner / Active Perspective */}
       <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-indigo-50/70 border border-indigo-100 rounded-full text-xs text-indigo-700">
         <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-        <span>Current Perspective:</span>
-        <strong className="font-semibold text-indigo-900">{activeRole}</strong>
+        <span>{t('common.currentPerspective')}</span>
+        <strong className="font-semibold text-indigo-900">
+          {t(`roles.${activeRole}.label`) || activeRole}
+        </strong>
       </div>
 
-      {/* Right Action Icons & Role Switcher */}
-      <div className="flex items-center gap-4">
+      {/* Right Action Icons & Role Switcher & Language Switcher */}
+      <div className="flex items-center gap-3">
+        {/* Language Switcher Toggle */}
+        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+          <button
+            data-lang-btn="vi"
+            onClick={() => setLanguage('vi')}
+            className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 ${
+              language === 'vi'
+                ? 'bg-white text-indigo-700 shadow-xs font-bold'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+            title="Tiếng Việt (Mặc định)"
+          >
+            <span>🇻🇳</span>
+            <span className="hidden sm:inline">Tiếng Việt</span>
+          </button>
+          <button
+            data-lang-btn="en"
+            onClick={() => setLanguage('en')}
+            className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 ${
+              language === 'en'
+                ? 'bg-white text-indigo-700 shadow-xs font-bold'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+            title="English"
+          >
+            <span>🇬🇧</span>
+            <span className="hidden sm:inline">English</span>
+          </button>
+        </div>
+
+        {/* Auto Capture Tool Button */}
+        {onOpenAutoCapture && (
+          <button
+            onClick={onOpenAutoCapture}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-indigo-700 border border-indigo-200/80 rounded-lg text-xs font-semibold shadow-xs transition-all hover:shadow-sm"
+            title="Tự động chụp ảnh website để làm tài liệu"
+          >
+            <Camera className="w-4 h-4 text-indigo-600" />
+            <span className="hidden md:inline">Chụp tài liệu</span>
+          </button>
+        )}
+
         {/* Notification Bell */}
         <div className="relative" ref={notifDropdownRef}>
           <button
@@ -125,10 +173,10 @@ export function Header() {
             <div className="absolute right-0 mt-2 w-84 bg-white rounded-lg shadow-popover border border-slate-200 py-2 z-50 animate-fade-in divide-y divide-slate-100" style={{ width: '340px' }}>
               <div className="px-4 py-2 flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
-                  Pending Workflow Alerts
+                  {t('common.pendingAlerts')}
                 </span>
                 <span className="text-[11px] text-slate-500 font-medium">
-                  {unreadNotificationsCount} unread
+                  {unreadNotificationsCount} {t('common.unread')}
                 </span>
               </div>
               <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
@@ -155,7 +203,7 @@ export function Header() {
                       {n.desc}
                     </p>
                     <div className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-indigo-600">
-                      <span>Jump to screen</span>
+                      <span>{t('common.jumpToScreen')}</span>
                       <ExternalLink className="w-3 h-3" />
                     </div>
                   </div>
@@ -163,7 +211,7 @@ export function Header() {
               </div>
               <div className="px-4 py-2 bg-slate-50 text-center">
                 <span className="text-[11px] text-slate-500">
-                  Real-time EMS sync active • 0 delay
+                  {t('common.realtimeSync')}
                 </span>
               </div>
             </div>
@@ -180,9 +228,9 @@ export function Header() {
               {activeRole.charAt(0)}
             </div>
             <div className="text-left hidden sm:block">
-              <div className="text-[11px] text-slate-500 leading-none">Role View</div>
+              <div className="text-[11px] text-slate-500 leading-none">{t('common.roleView')}</div>
               <div className="font-semibold text-slate-900 leading-tight mt-0.5">
-                {activeRole}
+                {t(`roles.${activeRole}.label`) || activeRole}
               </div>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
@@ -191,9 +239,9 @@ export function Header() {
           {isRoleDropdownOpen && (
             <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-popover border border-slate-200 py-1.5 z-50 animate-fade-in">
               <div className="px-3 py-2 border-b border-slate-100">
-                <p className="text-xs font-semibold text-slate-900">Switch User Perspective</p>
+                <p className="text-xs font-semibold text-slate-900">{t('common.switchPerspective')}</p>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Simulate interactive workflows across enterprise stakeholders
+                  {t('common.switchPerspectiveDesc')}
                 </p>
               </div>
               <div className="py-1">

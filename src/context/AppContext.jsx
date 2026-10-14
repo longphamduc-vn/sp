@@ -5,10 +5,39 @@ import {
   INITIAL_WORK_ORDERS,
   APPRAISAL_DATA
 } from '../data/mockData';
+import {
+  getTranslation,
+  translateCategory as i18nCategory,
+  translateReason as i18nReason,
+  translateStatus as i18nStatus
+} from '../i18n';
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
+  // Internationalization (i18n)
+  const [language, setLanguageState] = useState(() => {
+    try {
+      return localStorage.getItem('sp_lang') || 'vi';
+    } catch {
+      return 'vi';
+    }
+  });
+
+  const setLanguage = (newLang) => {
+    setLanguageState(newLang);
+    try {
+      localStorage.setItem('sp_lang', newLang);
+    } catch {
+      // ignore
+    }
+  };
+
+  const t = (path, params) => getTranslation(language, path, params);
+  const translateCategory = (cat) => i18nCategory(cat, language);
+  const translateReason = (reason) => i18nReason(reason, language);
+  const translateStatus = (status) => i18nStatus(status, language);
+
   // Navigation & Role
   const [activeTab, setActiveTab] = useState('workspace');
   const [activeRole, setActiveRole] = useState('Requestor');
@@ -22,40 +51,78 @@ export function AppProvider({ children }) {
   const [appraisal, setAppraisal] = useState(APPRAISAL_DATA);
 
   // Notification System
-  const [notifications, setNotifications] = useState([
-    {
-      id: "NOTIF-1",
-      title: "PIC Logic Clarification Needed",
-      desc: "Item SP-9021 requires quantity & calculation justification.",
-      time: "12m ago",
-      read: false,
-      tabTarget: "workspace"
-    },
-    {
-      id: "NOTIF-2",
-      title: "Price Increase Notice: +20%",
-      desc: "PO-8802 unit price updated from $150 to $180 by Mitsubishi.",
-      time: "45m ago",
-      read: false,
-      tabTarget: "po_lifecycle"
-    },
-    {
-      id: "NOTIF-3",
-      title: "Gate 2 Arrived: S7-1200 PLC",
-      desc: "Siemens CPU arrived at Dock 2. QC verification required.",
-      time: "2h ago",
-      read: false,
-      tabTarget: "warehouse"
-    },
-    {
-      id: "NOTIF-4",
-      title: "Appraisal Batch MTD Prepared",
-      desc: "October budget report is ready for Leader sign-off.",
-      time: "3h ago",
-      read: true,
-      tabTarget: "appraisal"
+  const notifications = useMemo(() => {
+    if (language === 'vi') {
+      return [
+        {
+          id: "NOTIF-1",
+          title: "Cần giải trình kỹ thuật cho duyệt PIC",
+          desc: "Vật tư SP-9021 yêu cầu làm rõ số lượng & cơ sở định mức.",
+          time: "12 phút trước",
+          read: false,
+          tabTarget: "workspace"
+        },
+        {
+          id: "NOTIF-2",
+          title: "Thông báo biến động giá: +20%",
+          desc: "Đơn giá PO-8802 điều chỉnh từ $150 lên $180 bởi Mitsubishi.",
+          time: "45 phút trước",
+          read: false,
+          tabTarget: "po_lifecycle"
+        },
+        {
+          id: "NOTIF-3",
+          title: "Hàng về cổng Dock 2: PLC S7-1200",
+          desc: "CPU Siemens đã giao tới Dock 2. Cần kiểm tra QC nhập kho.",
+          time: "2 giờ trước",
+          read: false,
+          tabTarget: "warehouse"
+        },
+        {
+          id: "NOTIF-4",
+          title: "Báo cáo thẩm định tháng MTD đã sẵn sàng",
+          desc: "Báo cáo ngân sách Tháng 10 đã chuẩn bị xong để Lãnh đạo ký duyệt.",
+          time: "3 giờ trước",
+          read: true,
+          tabTarget: "appraisal"
+        }
+      ];
     }
-  ]);
+    return [
+      {
+        id: "NOTIF-1",
+        title: "PIC Logic Clarification Needed",
+        desc: "Item SP-9021 requires quantity & calculation justification.",
+        time: "12m ago",
+        read: false,
+        tabTarget: "workspace"
+      },
+      {
+        id: "NOTIF-2",
+        title: "Price Increase Notice: +20%",
+        desc: "PO-8802 unit price updated from $150 to $180 by Mitsubishi.",
+        time: "45m ago",
+        read: false,
+        tabTarget: "po_lifecycle"
+      },
+      {
+        id: "NOTIF-3",
+        title: "Gate 2 Arrived: S7-1200 PLC",
+        desc: "Siemens CPU arrived at Dock 2. QC verification required.",
+        time: "2h ago",
+        read: false,
+        tabTarget: "warehouse"
+      },
+      {
+        id: "NOTIF-4",
+        title: "Appraisal Batch MTD Prepared",
+        desc: "October budget report is ready for Leader sign-off.",
+        time: "3h ago",
+        read: true,
+        tabTarget: "appraisal"
+      }
+    ];
+  }, [language]);
 
   // Toasts System
   const [toasts, setToasts] = useState([]);
@@ -382,6 +449,12 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider
       value={{
+        language,
+        setLanguage,
+        t,
+        translateCategory,
+        translateReason,
+        translateStatus,
         activeTab,
         setActiveTab,
         activeRole,

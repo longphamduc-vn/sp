@@ -28,7 +28,10 @@ export function WorkspaceHome() {
     setIsTaskDrawerOpen,
     setSelectedTask,
     setSelectedPoDetail,
-    activeRole
+    activeRole,
+    t,
+    translateCategory,
+    translateStatus
   } = useApp();
 
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -69,14 +72,14 @@ export function WorkspaceHome() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Workspace & Procurement Task Center
+              {t('workspace.title')}
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-              System Online
+              {t('common.systemOnline')}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-            Welcome back, <strong className="text-slate-800">{activeRole}</strong>. Monitor pending PIC logic inquiries, price volatility interlocks, and trace purchase requests through factory goods receipt.
+            {t('workspace.welcomeBack')}, <strong className="text-slate-800">{t(`roles.${activeRole}.label`) || activeRole}</strong>. {t('workspace.subtitle')}
           </p>
         </div>
 
@@ -86,7 +89,7 @@ export function WorkspaceHome() {
             className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all hover:shadow hover:-translate-y-0.5 active:translate-y-0"
           >
             <PlusCircle className="w-4 h-4" />
-            + New Spare Part Request
+            {t('workspace.newRequestBtn')}
           </button>
         </div>
       </div>
@@ -96,15 +99,12 @@ export function WorkspaceHome() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-              Pending Action Tasks
+              {t('workspace.pendingActionTasks')}
             </h2>
             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-              {tasks.length} Actionable
+              {tasks.length} {t('workspace.requiresAction')}
             </span>
           </div>
-          <span className="text-xs text-slate-400">
-            Click banner to open resolution drawer or review modal
-          </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -187,10 +187,10 @@ export function WorkspaceHome() {
         <div className="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
           <div className="flex items-center gap-3">
             <h3 className="text-sm font-bold text-slate-900">
-              Active Spare Part Requests
+              {t('workspace.allRequestsLedger')}
             </h3>
             <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">
-              {tableItems.length} records
+              {tableItems.length} {t('common.items')}
             </span>
           </div>
 
@@ -198,7 +198,7 @@ export function WorkspaceHome() {
             {/* Status Filter */}
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-              <span>Status:</span>
+              <span>{t('workspace.filterStatus')}:</span>
               <select
                 value={statusFilter}
                 onChange={(e) => {
@@ -207,20 +207,20 @@ export function WorkspaceHome() {
                 }}
                 className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
               >
-                <option value="ALL">All Statuses</option>
-                <option value="In Review">In Review</option>
-                <option value="PIC Review">PIC Review</option>
-                <option value="PO Request">PO Request</option>
-                <option value="PO Standby">PO Standby</option>
-                <option value="PO Remained">PO Remained</option>
-                <option value="PO Receiving">PO Receiving</option>
-                <option value="Stocked In (Inventory)">Stocked In</option>
+                <option value="ALL">{t('workspace.allStatuses')}</option>
+                <option value="In Review">{t('statuses.In Review')}</option>
+                <option value="PIC Review">{t('statuses.PIC Review')}</option>
+                <option value="PO Request">{t('statuses.PO Request')}</option>
+                <option value="PO Standby">{t('statuses.PO Standby')}</option>
+                <option value="PO Remained">{t('statuses.PO Remained')}</option>
+                <option value="PO Receiving">{t('statuses.PO Receiving')}</option>
+                <option value="Stocked In (Inventory)">{t('statuses.Stocked In (Inventory)')}</option>
               </select>
             </div>
 
             {/* Category Filter */}
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <span>Category:</span>
+              <span>{t('workspace.filterCategory')}:</span>
               <select
                 value={categoryFilter}
                 onChange={(e) => {
@@ -229,10 +229,10 @@ export function WorkspaceHome() {
                 }}
                 className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
               >
-                <option value="ALL">All Categories</option>
-                <option value="Electrical">Electrical</option>
-                <option value="Mechanical">Mechanical</option>
-                <option value="Pneumatic">Pneumatic</option>
+                <option value="ALL">{t('workspace.allCategories')}</option>
+                <option value="Electrical">{t('categories.Electrical')}</option>
+                <option value="Mechanical">{t('categories.Mechanical')}</option>
+                <option value="Pneumatic">{t('categories.Pneumatic')}</option>
               </select>
             </div>
           </div>
@@ -243,14 +243,14 @@ export function WorkspaceHome() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-100/60 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4">Item Code & Specs</th>
-                <th className="py-3 px-4">Line & Process</th>
-                <th className="py-3 px-4 max-w-xs">Logic & Calculation Justification</th>
-                <th className="py-3 px-4">Requested Qty</th>
-                <th className="py-3 px-4">Est. Cost</th>
-                <th className="py-3 px-4">Interlock Check</th>
-                <th className="py-3 px-4">Workflow Status</th>
-                <th className="py-3 px-4 text-right">Action</th>
+                <th className="py-3 px-4">{t('common.itemCode')} & {t('common.specs')}</th>
+                <th className="py-3 px-4">{t('common.line')}</th>
+                <th className="py-3 px-4 max-w-xs">{t('wizard.calculationLogic')}</th>
+                <th className="py-3 px-4">{t('common.qty')}</th>
+                <th className="py-3 px-4">{t('common.totalCost')}</th>
+                <th className="py-3 px-4">{t('common.interlockStatus')}</th>
+                <th className="py-3 px-4">{t('common.status')}</th>
+                <th className="py-3 px-4 text-right">{t('common.action')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -280,7 +280,7 @@ export function WorkspaceHome() {
                           </span>
                           {item.priceRiskAlert && (
                             <span className="text-[10px] px-1 bg-red-100 text-red-700 font-bold rounded">
-                              Price Risk
+                              {t('po.cardPriceRisk')}
                             </span>
                           )}
                         </div>
@@ -299,7 +299,7 @@ export function WorkspaceHome() {
                     <div className="font-medium text-slate-800">{item.line}</div>
                     <div className="text-[11px] text-slate-500">{item.process}</div>
                     <div className="text-[10px] text-slate-400 mt-0.5">
-                      Need by: {item.needByDate}
+                      {t('common.needBy')}: {item.needByDate}
                     </div>
                   </td>
 
@@ -310,7 +310,7 @@ export function WorkspaceHome() {
                     </div>
                     {item.clarificationRequested && (
                       <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                        ⚠️ Clarification Requested
+                        ⚠️ {t('pic.requestClarification')}
                       </span>
                     )}
                   </td>
@@ -342,7 +342,7 @@ export function WorkspaceHome() {
 
                   {/* Workflow Status */}
                   <td className="py-3 px-4">
-                    <Badge>{item.status}</Badge>
+                    <Badge>{translateStatus(item.status)}</Badge>
                     <div className="text-[10px] text-slate-400 mt-1 font-mono">
                       {item.poNumber || 'PO Not Assigned'}
                     </div>
@@ -363,14 +363,14 @@ export function WorkspaceHome() {
                           }}
                           className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded font-medium text-[11px] transition-colors"
                         >
-                          Reply PIC
+                          {t('workspace.replyToPic')}
                         </button>
                       ) : (
                         <button
                           onClick={() => handleOpenPoDetail(item)}
                           className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded font-medium text-[11px] transition-colors"
                         >
-                          Details
+                          {t('common.viewDetails')}
                         </button>
                       )}
                     </div>
@@ -381,7 +381,7 @@ export function WorkspaceHome() {
               {paginatedItems.length === 0 && (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-slate-400">
-                    No spare part requests matched your filter.
+                    {t('workspace.noMatchingRecords')}
                   </td>
                 </tr>
               )}
@@ -392,8 +392,8 @@ export function WorkspaceHome() {
         {/* Pagination footer */}
         <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
           <div>
-            Showing {(currentPage - 1) * pageSize + 1} to{' '}
-            {Math.min(currentPage * pageSize, tableItems.length)} of {tableItems.length} entries
+            {t('common.showing')} {(currentPage - 1) * pageSize + 1} -{' '}
+            {Math.min(currentPage * pageSize, tableItems.length)} {t('common.of')} {tableItems.length} {t('common.items')}
           </div>
           <div className="flex items-center gap-1">
             <button
@@ -401,7 +401,7 @@ export function WorkspaceHome() {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               className="px-2.5 py-1 border border-slate-200 rounded bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-slate-700"
             >
-              Previous
+              {t('common.previous')}
             </button>
             <span className="px-2 font-mono">
               {currentPage} / {totalPages}
@@ -411,7 +411,7 @@ export function WorkspaceHome() {
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               className="px-2.5 py-1 border border-slate-200 rounded bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-slate-700"
             >
-              Next
+              {t('common.next')}
             </button>
           </div>
         </div>

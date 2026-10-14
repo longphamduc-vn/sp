@@ -22,7 +22,8 @@ export function Sidebar() {
     isSidebarCollapsed,
     setIsSidebarCollapsed,
     tasks,
-    items
+    items,
+    t
   } = useApp();
 
   const pendingTasksCount = tasks.filter((t) => !t.read || t.type === 'clarification').length;
@@ -32,48 +33,48 @@ export function Sidebar() {
   const navItems = [
     {
       id: 'workspace',
-      label: 'Workspace & Tasks',
+      label: t('nav.workspace'),
       icon: Inbox,
       badge: pendingTasksCount > 0 ? pendingTasksCount : null,
       badgeColor: 'bg-amber-100 text-amber-800'
     },
     {
       id: 'wizard',
-      label: 'Item Request Form',
+      label: t('nav.wizard'),
       icon: FilePlus2,
       badge: null
     },
     {
       id: 'pic_review',
-      label: 'PIC Review Hub',
+      label: t('nav.pic_review'),
       icon: CheckSquare,
       badge: picReviewCount > 0 ? picReviewCount : null,
       badgeColor: 'bg-blue-100 text-blue-800'
     },
     {
       id: 'appraisal',
-      label: 'Monthly Appraisal',
+      label: t('nav.appraisal'),
       icon: BarChart3,
-      badge: 'OCT'
+      badge: t('nav.octBadge')
     },
     {
       id: 'po_lifecycle',
-      label: 'PO Lifecycle Board',
+      label: t('nav.po_lifecycle'),
       icon: Truck,
-      badge: '4 Stages'
+      badge: t('nav.stagesBadge')
     },
     {
       id: 'warehouse',
-      label: 'Warehouse & WO',
+      label: t('nav.warehouse'),
       icon: PackageCheck,
       badge: qcPendingCount > 0 ? `${qcPendingCount} QC` : null,
       badgeColor: 'bg-red-100 text-red-700'
     },
     {
       id: 'dashboard',
-      label: 'Leader Dashboard',
+      label: t('nav.dashboard'),
       icon: TrendingUp,
-      badge: 'Analytics'
+      badge: t('nav.analyticsBadge')
     }
   ];
 
@@ -113,7 +114,7 @@ export function Sidebar() {
         <div className="p-3 space-y-1">
           {!isSidebarCollapsed && (
             <div className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Procurement Lifecycle
+              {t('nav.lifecycleHeader')}
             </div>
           )}
 
@@ -124,6 +125,7 @@ export function Sidebar() {
             return (
               <button
                 key={item.id}
+                data-nav-tab={item.id}
                 onClick={() => setActiveTab(item.id)}
                 title={isSidebarCollapsed ? item.label : undefined}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all group relative ${
@@ -165,15 +167,15 @@ export function Sidebar() {
             <div className="flex items-center justify-between text-[11px] font-semibold text-slate-700">
               <span className="flex items-center gap-1">
                 <Cpu className="w-3.5 h-3.5 text-indigo-600" />
-                EMS Node
+                {t('common.emsNode')}
               </span>
               <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Sync
+                {t('common.liveSync')}
               </span>
             </div>
             <div className="text-[10px] text-slate-500 mt-1">
-              Internal SAP/EMS Connector
+              {t('common.connector')}
             </div>
           </div>
         )}
@@ -181,14 +183,14 @@ export function Sidebar() {
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors border border-transparent hover:border-slate-200"
-          title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          title={isSidebarCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
         >
           {isSidebarCollapsed ? (
             <ChevronRight className="w-4 h-4" />
           ) : (
             <>
               <ChevronLeft className="w-4 h-4" />
-              <span>Collapse Sidebar</span>
+              <span>{t('common.collapseSidebar')}</span>
             </>
           )}
         </button>
